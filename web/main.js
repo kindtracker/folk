@@ -1,4 +1,6 @@
+import * as THREE from "https://esm.sh/three@0.185.1";
 import { map_init } from "./map.js";
+import { player_init, player_obj_init } from "./player.js";
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -54,7 +56,7 @@ document.addEventListener("contextmenu", (e) => {
 document.addEventListener("wheel", (e) => {
   e.preventDefault();
   camera_distance += e.deltaY * 0.01;
-  camera_distance = Math.max(2, Math.min(50, cameraDistance));
+  camera_distance = Math.max(2, Math.min(50, camera_distance));
 });
 
 window.addEventListener("resize", () => {
@@ -67,7 +69,9 @@ function deg(degrees) {
   return degrees * (Math.PI / 180);
 }
 
-map_init(scene, deg, geom, 1)
+map_init(scene, deg, geom, 1);
+player_obj_init(scene);
+player_init("d")
 
 function animate() {
   requestAnimationFrame(animate);
