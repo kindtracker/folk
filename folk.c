@@ -6,6 +6,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <netdb.h>
+#include <errno.h>
 
 typedef struct {
   const char *name;
@@ -15,7 +16,7 @@ typedef struct {
   int id;
 } player_t;
 
-player_t *login(int sock, struct sockaddr_in *addr, const char *token) {
+player_t *login(int sock, struct sockaddr_in addr, const char *token) {
   int msg_len = 12 + 64;
   char *msg = (char *)malloc(msg_len);
   memset(msg, 0, msg_len);
@@ -24,20 +25,26 @@ player_t *login(int sock, struct sockaddr_in *addr, const char *token) {
   int c = 0x40;
   memcpy(msg + 4, &c, 4);
   memcpy(msg + 12, token, 64);
-  
-  if (sendto(sock, msg, msg_len, 0, (struct sockaddr *)addr, sizeof(*addr)) < 0) {
+
+  printf("[folk] sending to %s:%d\n", inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
+  printf("[folk] sending login packet (%d bytes)\n", msg_len);
+  if (sendto(sock, msg, msg_len, 0, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
     printf("[folk] something goes wrong\n");
     perror("sendto");
     free(msg);
     return NULL;
   }
+  printf("[folk] sent\n");
 
   player_t *player = (player_t *)malloc(sizeof(player_t));
   char buffer[4096];
   socklen_t addr_len = sizeof(struct sockaddr_in);
-  
-  while (true) {
-    int bytes = recvfrom(sock, buffer, sizeof(buffer) - 1, 0, (struct sockaddr *)addr, &addr_len);
+ 
+  int t = 10000;
+  while (t > 0) {
+    t--;
+    int bytes = recvfrom(sock, buffer, sizeof(buffer) - 1, 0, (struct sockaddr *)&addr, &addr_len);
+    printf("[folk] recvfrom returned: %d (errno: %d)\n", bytes, errno);
     if (bytes < 0) {
       printf("[folk] something goes wrong\n");
       perror("recvfrom");
@@ -45,8 +52,35 @@ player_t *login(int sock, struct sockaddr_in *addr, const char *token) {
     }
     
     int pkt_type = buffer[0];
+    printf("[folk] received %d bytes, type: 0x%02x\n", bytes, pkt_type);
     if (pkt_type == 0x12) {
       printf("[folk] auth: waiting\n");
+      char state[103];
+      memset(state, 0, sizeof(state));
+  
+      int type = 0;
+      memcpy(state, &type, 4);
+  
+      uint64_t name_len = 11;  // "kindtracker"
+      memcpy(state + 20, &name_len, 8);
+      memcpy(state + 28, "kindtracker", 11);
+  
+      float x = 0.0, y = 325.6, z = 0.0;
+      memcpy(state + 40, &x, 4);
+      memcpy(state + 44, &y, 4);
+      memcpy(state + 48, &z, 4);
+  
+      float yaw = 0.0;
+      memcpy(state + 52, &yaw, 4);
+  
+      state[56] = 0;
+      state[57] = 1;
+  
+      if (sendto(sock, state, sizeof(state), 0, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+        printf("[folk] something goes wrong\n");
+        perror("sendto state");
+        return NULL;
+      }
     } else if (pkt_type == 0x11) {
       uint64_t name_len;
       memcpy(&name_len, buffer + 28, 8);
@@ -91,6 +125,12 @@ int main(int argc, char *argv[]) {
     perror("socket");
     return 1;
   }
+  struct timeval tv;
+  tv.tv_sec = 10;
+  tv.tv_usec = 0;
+  if (setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
+    perror("setsockopt");
+  }
   
   struct sockaddr_in server_addr;
   memset(&server_addr, 0, sizeof(server_addr));
@@ -101,10 +141,15 @@ int main(int argc, char *argv[]) {
   struct sockaddr_in *resolved = (struct sockaddr_in *)result->ai_addr;
   server_addr.sin_addr = resolved->sin_addr;
 
-  struct sockaddr_in *addr = (struct sockaddr_in *)result->ai_addr;
-  player_t *player = login(sock, addr, token);
-  printf("player: %p", player);
-  printf("name: %s", player->name);
+  struct sockaddr_in *raddr = (struct sockaddr_in *)result->ai_addr;
+  printf("[folk] resolved IP: %s\n", inet_ntoa(resolved->sin_addr));
+  printf("[folk] port: %d\n", ntohs(resolved->sin_port));
+  
+  player_t *player = login(sock, *resolved, token);
+  printf("[folk] player: %p\n", player);
+  if (player) {
+    printf("[folk] name: %s\n", player->name);
+  }
 /*  while (true) {
     const char *message = "Hello from UDP client";
     if (sendto(sock, message, strlen(message), 0, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {

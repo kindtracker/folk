@@ -1,0 +1,17 @@
+export async function map_init(scene, deg, geom, id) {
+  const map_res = await fetch(`https://playvortex.io/api/maps/${id}`);
+  const map = await map_res.json();
+
+  for (let i = 0; i < map.length; i++) {
+    const partj = map[i];
+    if (partj.T == "ShirtPad") {
+      continue;
+    }
+
+    const mat = new THREE.MeshBasicMaterial({ color: Number(`0x${partj.C}`) });
+    const part = new THREE.Mesh(geom, mat);
+    part.position.set(partj.P[0], partj.P[1], partj.P[2]);
+    part.rotation.set(deg(partj.R[0]), deg(partj.R[1]), deg(partj.R[2]));
+    scene.add(part);
+  }
+}
