@@ -69,9 +69,9 @@ function deg(degrees) {
   return degrees * (Math.PI / 180);
 }
 
-map_init(scene, deg, geom, 1);
+map_init(scene, deg, 1);
 player_obj_init(scene);
-player_init("d")
+player_init("test")
 
 function animate() {
   requestAnimationFrame(animate);
