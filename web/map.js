@@ -1,5 +1,5 @@
 export async function map_init(scene, deg, geom, id) {
-  const map_res = await fetch(`https://playvortex.io/api/maps/${id}`);
+  const map_res = await fetch(`http://127.0.0.1:80/map/${id}`);
   const map = await map_res.json();
 
   for (let i = 0; i < map.length; i++) {

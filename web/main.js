@@ -7,7 +7,7 @@ const geom = new THREE.BoxGeometry();
 
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setClearColor(0x1a1a1a);
-renderer.setPixelRatio(0.4);
+renderer.setPixelRatio(0.6);
 document.body.appendChild(renderer.domElement);
 
 camera.position.z = 1;
