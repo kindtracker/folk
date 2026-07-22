@@ -1,7 +1,19 @@
 import * as THREE from "https://esm.sh/three@0.185.1";
 import { glb_load } from "./obj.js";
 
+const texture_loader = new THREE.TextureLoader();
+// const skin_texture = texture_loader.load("assets/.png");
+
 let player_model = null;
+
+const mesh_map_texture = {
+  0: "assets/42", // Head
+  1: "assets/17", // Left arm
+  2: "assets/27", // Left leg 
+  3: "assets/17", // Right arm
+  4: "assets/27", // Right leg
+  5: "assets/17" // Torso  
+};
 
 export function player_obj_init_on_load(model) {
   model.position.set(0, 0, 0);
@@ -35,9 +47,17 @@ export function player_init(name) {
     return null;
   }
   const player = { name, clothing: [0, 0, 0], model: player_model, id: 0, walking: true, on_ground: false, dying: 0, parts: [] };
+  let mesh_index = 0;
   player.model.traverse((child) => {
+    if (child.isMesh) {
+      const texture = texture_loader.load(mesh_map_texture[mesh_index]);
+      texture.repeat.set(1, 1);
+      texture.flipY = false;
+      child.material = new THREE.MeshStandardMaterial({ map: texture });
+      mesh_index++;
+    }
     if (child.isBone) {
-      console.log("found bone:", child.name);
+      // console.log("found bone:", child.name);
       player.parts[child.name] = child;
     }
   });

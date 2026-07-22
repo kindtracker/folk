@@ -15,7 +15,8 @@ let mouse_down = [false, false, false];
 
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setClearColor(0x7cc6e7);
-renderer.setPixelRatio(0.6);
+renderer.setPixelRatio(1);
+renderer.shadowMap.enabled = true;
 document.body.appendChild(renderer.domElement);
 
 camera.position.y = 6;
@@ -25,6 +26,9 @@ scene.add(ambient_light);
 
 const directional_light = new THREE.DirectionalLight(0xffffff, 0.8);
 directional_light.position.set(5, 10, 7);
+directional_light.castShadow = true;
+directional_light.shadow.mapSize.width = 2048;
+directional_light.shadow.mapSize.height = 2048;
 scene.add(directional_light);
 
 document.addEventListener("mousemove", (e) => {
@@ -56,7 +60,7 @@ document.addEventListener("wheel", (e) => {
   e.preventDefault();
   camera_distance += e.deltaY * 0.01;
   camera_distance = Math.max(2, Math.min(50, camera_distance));
-});
+}, { passive: false });
 
 window.addEventListener("resize", () => {
   camera.aspect = window.innerWidth / window.innerHeight;
@@ -87,6 +91,7 @@ function animate() {
   if (player.parts["Head"]) {
     const world_pos = new THREE.Vector3();
     player.parts["Head"].getWorldPosition(world_pos);
+    world_pos.y += 0.35;
     camera.lookAt(world_pos);
   }
 

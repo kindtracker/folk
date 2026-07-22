@@ -16,52 +16,57 @@ typedef struct {
   int id;
 } player_t;
 
-player_t *login(int sock, struct sockaddr_in addr, const char *token) {
+player_t *login(int sock, const char *token) {
   int msg_len = 12 + 64;
   char *msg = (char *)malloc(msg_len);
-  memset(msg, 0, msg_len);
-  int type = 6;
-  memcpy(msg, &type, 4);
-  int c = 0x40;
-  memcpy(msg + 4, &c, 4);
+  memset(msg, 0, sizeof(msg));
+  msg[0] = 0x06;
+  msg[4] = 0x40;
   memcpy(msg + 12, token, 64);
 
-  printf("[folk] sending to %s:%d\n", inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
   printf("[folk] sending login packet (%d bytes)\n", msg_len);
-  if (sendto(sock, msg, msg_len, 0, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+  if (send(sock, msg, msg_len, 0) < 0) {
     printf("[folk] something goes wrong\n");
-    perror("sendto");
+    perror("send");
     free(msg);
     return NULL;
   }
   printf("[folk] sent\n");
 
   player_t *player = (player_t *)malloc(sizeof(player_t));
+  memset(player, 0, sizeof(player_t));
   char buffer[4096];
-  socklen_t addr_len = sizeof(struct sockaddr_in);
- 
-  int t = 10000;
-  while (t > 0) {
-    t--;
-    int bytes = recvfrom(sock, buffer, sizeof(buffer) - 1, 0, (struct sockaddr *)&addr, &addr_len);
-    printf("[folk] recvfrom returned: %d (errno: %d)\n", bytes, errno);
+  
+  while (1) {
+    int bytes = recv(sock, buffer, sizeof(buffer) - 1, 0);
+    printf("[folk] recv returned: %d (errno: %d)\n", bytes, errno);
+    
     if (bytes < 0) {
-      printf("[folk] something goes wrong\n");
-      perror("recvfrom");
+      if (errno == EAGAIN || errno == EWOULDBLOCK) {
+        printf("[folk] timeout waiting for response\n");
+      } else {
+        printf("[folk] something goes wrong\n");
+        perror("recv");
+      }
+      free(player);
+      free(msg);
       return NULL;
     }
     
+    if (bytes < 1) continue;
+    
     int pkt_type = buffer[0];
     printf("[folk] received %d bytes, type: 0x%02x\n", bytes, pkt_type);
+    
     if (pkt_type == 0x12) {
-      printf("[folk] auth: waiting\n");
+      printf("[folk] auth: waiting (0x12 received)\n");
       char state[103];
       memset(state, 0, sizeof(state));
   
       int type = 0;
       memcpy(state, &type, 4);
   
-      uint64_t name_len = 11;  // "kindtracker"
+      uint64_t name_len = 11;
       memcpy(state + 20, &name_len, 8);
       memcpy(state + 28, "kindtracker", 11);
   
@@ -76,26 +81,59 @@ player_t *login(int sock, struct sockaddr_in addr, const char *token) {
       state[56] = 0;
       state[57] = 1;
   
-      if (sendto(sock, state, sizeof(state), 0, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
-        printf("[folk] something goes wrong\n");
-        perror("sendto state");
+      if (send(sock, state, sizeof(state), 0) < 0) {
+        printf("[folk] state send failed\n");
+        perror("send state");
+        free(player);
+        free(msg);
         return NULL;
       }
+      printf("[folk] state sent\n");
+      
     } else if (pkt_type == 0x11) {
       uint64_t name_len;
       memcpy(&name_len, buffer + 28, 8);
+      
       char *name = (char *)malloc(name_len + 1);
       memcpy(name, buffer + 36, name_len);
       name[name_len] = '\0';
       player->name = strdup(name);
       free(name);
-      printf("[folk] auth: successfully\n");
+      
+      memcpy(&player->x, buffer + 40, 4);
+      memcpy(&player->y, buffer + 44, 4);
+      memcpy(&player->z, buffer + 48, 4);
+      memcpy(&player->id, buffer + 52, 4);
+      
+      printf("[folk] auth: successful\n");
       free(msg);
       break;
     }
   }
   
   return player;
+}
+
+in_addr_t resolvedomain(char *domain) {
+  struct addrinfo hints;
+  struct addrinfo *result;
+  int status;
+
+  memset(&hints, 0, sizeof(hints));
+  hints.ai_family = AF_INET;
+  hints.ai_socktype = SOCK_DGRAM;
+
+  status = getaddrinfo(domain, "80", &hints, &result);
+  if (status != 0) {
+    fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(status));
+    return INADDR_NONE;
+  }
+
+  struct sockaddr_in *ipv4 = (struct sockaddr_in *)result->ai_addr;
+  in_addr_t addr = ipv4->sin_addr.s_addr;
+
+  freeaddrinfo(result);
+  return addr;
 }
 
 int main(int argc, char *argv[]) {
@@ -105,75 +143,47 @@ int main(int argc, char *argv[]) {
   }
   const char *token = argv[1];
   if (strlen(token) != 64) {
-    printf("token needs to be 64 bytes wide (size: %d)\n", strlen(token));
-    return 1;
-  }
-
-  struct addrinfo hints, *result;
-  memset(&hints, 0, sizeof(hints));
-  hints.ai_family = AF_INET;
-  hints.ai_socktype = SOCK_DGRAM;
-
-  int status = getaddrinfo("connect.playvortex.io", "7777", &hints, &result);
-  if (status != 0) {
-    fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(status));
+    printf("token needs to be 64 bytes wide (size: %d)\n", (int)strlen(token));
     return 1;
   }
 
   int sock = socket(AF_INET, SOCK_DGRAM, 0);
+  struct sockaddr_in serv_addr;
   if (sock < 0) {
+    printf("[folk] something goes wrong\n");
     perror("socket");
     return 1;
   }
+  
   struct timeval tv;
   tv.tv_sec = 10;
   tv.tv_usec = 0;
   if (setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
+    printf("[folk] something goes wrong\n");
     perror("setsockopt");
+    return 1;
   }
   
-  struct sockaddr_in server_addr;
-  memset(&server_addr, 0, sizeof(server_addr));
-  server_addr.sin_family = AF_INET;
-  server_addr.sin_port = htons(7777);
+  bzero(&serv_addr, sizeof(serv_addr));
+  serv_addr.sin_family = AF_INET;
+  serv_addr.sin_port = htons(7777);
+  serv_addr.sin_addr.s_addr = resolvedomain("connect.playvortex.io");
 
-  printf("[folk] connecting to the server\n");
-  struct sockaddr_in *resolved = (struct sockaddr_in *)result->ai_addr;
-  server_addr.sin_addr = resolved->sin_addr;
-
-  struct sockaddr_in *raddr = (struct sockaddr_in *)result->ai_addr;
-  printf("[folk] resolved IP: %s\n", inet_ntoa(resolved->sin_addr));
-  printf("[folk] port: %d\n", ntohs(resolved->sin_port));
+  printf("[folk] connecting to server\n");
+  if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
+    printf("[folk] something goes wrong\n");
+    perror("connect");
+    return 1;
+  }
+  printf("[folk] connected\n");
   
-  player_t *player = login(sock, *resolved, token);
+  player_t *player = login(sock, token);
   printf("[folk] player: %p\n", player);
   if (player) {
     printf("[folk] name: %s\n", player->name);
+    printf("[folk] position: (%.1f, %.1f, %.1f)\n", player->x, player->y, player->z);
   }
-/*  while (true) {
-    const char *message = "Hello from UDP client";
-    if (sendto(sock, message, strlen(message), 0, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
-      perror("sendto");
-      close(sock);
-      return 1;
-    }
 
-    char buffer[1024];
-    struct sockaddr_in client_addr;
-    socklen_t addr_len = sizeof(client_addr);
-
-    int n = recvfrom(sock, buffer, sizeof(buffer) - 1, 0, (struct sockaddr *)&client_addr, &addr_len);
-    if (n < 0) {
-      perror("recvfrom");
-      close(sock);
-      return 1;
-    }
-
-    buffer[n] = '\0';
-    printf("received: %s\n", buffer);
-  }*/
-
-  freeaddrinfo(result);
   close(sock);
   return 0;
 }

@@ -15,6 +15,8 @@ export async function map_init(scene, deg, id) {
     const part = new THREE.Mesh(geom, mat);
     part.position.set(partj.P[0], partj.P[1], partj.P[2]);
     part.rotation.set(deg(partj.R[0]), deg(partj.R[1]), deg(partj.R[2]));
+    part.castShadow = true;
+    part.receiveShadow = true;
     scene.add(part);
   }
 }
