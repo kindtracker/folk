@@ -7,7 +7,6 @@ const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerH
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 const canvas = renderer.domElement;
 
-const camera_target = new THREE.Vector3(0, 0, 0);
 let camera_distance = 10;
 let camera_yaw = 0;
 let camera_pitch = 0.0;
@@ -81,7 +80,7 @@ function deg(degrees) {
   return degrees * (Math.PI / 180);
 }
 
-map_init(scene, deg, 1);
+await map_init(scene, deg, 1);
 
 let player = null;
 player_obj_init(scene, () => {
@@ -92,17 +91,18 @@ player_obj_init(scene, () => {
 function animate() {
   requestAnimationFrame(animate);
 
-  camera.position.x = camera_target.x + camera_distance * Math.cos(camera_pitch) * Math.sin(camera_yaw);
-  camera.position.y = camera_target.y + camera_distance * Math.sin(camera_pitch);
-  camera.position.z = camera_target.z + camera_distance * Math.cos(camera_pitch) * Math.cos(camera_yaw);
-
   player_animate(player);
-  if (player.parts["Head"]) {
-    const world_pos = new THREE.Vector3();
-    player.parts["Head"].getWorldPosition(world_pos);
-    world_pos.y += 0.35;
-    camera.lookAt(world_pos);
-  }
+  player.model.updateMatrixWorld(true);
+  
+  const head_world_pos = new THREE.Vector3();
+  player.parts["Head"].getWorldPosition(head_world_pos);
+  head_world_pos.y += 0.35;
+
+  camera.position.x = head_world_pos.x + camera_distance * Math.cos(camera_pitch) * Math.sin(camera_yaw);
+  camera.position.y = head_world_pos.y + camera_distance * Math.sin(camera_pitch);
+  camera.position.z = head_world_pos.z + camera_distance * Math.cos(camera_pitch) * Math.cos(camera_yaw);
+
+  camera.lookAt(head_world_pos);
 
   renderer.render(scene, camera);
 }
