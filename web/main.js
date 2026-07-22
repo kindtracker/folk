@@ -5,7 +5,6 @@ import { player_init, player_obj_init } from "./player.js";
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
-const geom = new THREE.BoxGeometry();
 const canvas = renderer.domElement;
 
 const camera_target = new THREE.Vector3(0, 0, 0);
@@ -15,7 +14,7 @@ let camera_pitch = 0.0;
 let mouse_down = [false, false, false];
 
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setClearColor(0x1a1a1a);
+renderer.setClearColor(0x7cc6e7);
 renderer.setPixelRatio(0.6);
 document.body.appendChild(renderer.domElement);
 
@@ -70,8 +69,12 @@ function deg(degrees) {
 }
 
 map_init(scene, deg, 1);
-player_obj_init(scene);
-player_init("test")
+
+let player = null;
+player_obj_init(scene, () => {
+  player = player_init("test");
+  animate();
+});
 
 function animate() {
   requestAnimationFrame(animate);
@@ -79,10 +82,10 @@ function animate() {
   camera.position.x = camera_target.x + camera_distance * Math.cos(camera_pitch) * Math.sin(camera_yaw);
   camera.position.y = camera_target.y + camera_distance * Math.sin(camera_pitch);
   camera.position.z = camera_target.z + camera_distance * Math.cos(camera_pitch) * Math.cos(camera_yaw);
-  
-  camera.lookAt(camera_target);
+
+  const world_pos = new THREE.Vector3();
+  player.head.getWorldPosition(world_pos);
+  camera.lookAt(world_pos);
 
   renderer.render(scene, camera);
 }
-
-animate();

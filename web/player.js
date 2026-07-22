@@ -9,11 +9,16 @@ export function player_obj_init_on_load(model) {
   player_model = model;
 }
 
-export function player_obj_init(scene) {
+export function player_obj_init(scene, callback) {
   glb_load("assets/female.glb", (model) => {
     scene.add(model);
     player_obj_init_on_load(model);
+    if (callback) callback();
   });
+}
+
+export function player_animate(player) {
+
 }
 
 export function player_init(name) {
@@ -21,6 +26,13 @@ export function player_init(name) {
     console.error("player model not loaded yet");
     return null;
   }
-  const player = { name, clothing: [0, 0, 0], model: player_model };
+  const player = { name, clothing: [0, 0, 0], model: player_model, walking: false, head: null };
+  let head = null;
+  player.model.traverse((child) => {
+    if (child.isBone && child.name == "Head") {
+      head = child;
+    }
+  });
+  player.head = head;
   return player;
 }
