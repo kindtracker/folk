@@ -22,7 +22,7 @@ export function player_obj_init_on_load(model) {
 }
 
 export function player_obj_init(scene, callback) {
-  glb_load("assets/female.glb", (model) => {
+  glb_load("assets/male.glb", (model) => {
     player_obj_init_on_load(model);
     if (callback) callback();
   });
@@ -63,9 +63,12 @@ export function player_init(name) {
     }
   });
   player.body = new CANNON.Body({
-    mass: 1,
-    shape: new CANNON.Box(new CANNON.Vec3(2, 2.5, 0.5))
+    mass: 1
   });
+  player.body.addShape(
+    new CANNON.Box(new CANNON.Vec3(1, 2, 0.5)),
+    new CANNON.Vec3(0, 2, 0.3)
+  );
   player.body.fixedRotation = true;
   player.body.updateMassProperties();
 

@@ -77,6 +77,14 @@ export function engine_load() {
     mouse_down[e.button] = false;
   });
 
+  document.addEventListener("keydown", (e) => {
+    key_down[e.code] = true;
+  });
+
+  document.addEventListener("keyup", (e) => {
+    key_down[e.code] = false;
+  });
+
   document.addEventListener("contextmenu", (e) => {
     e.preventDefault();
   });
@@ -111,11 +119,27 @@ export async function engine_map_load(id) {
 }
 
 export function engine_input() {
-
+  const speed = 50;
+  player.body.velocity.x = 0;
+  player.body.velocity.z = 0;
+  player.body.quaternion.setFromEuler(0, camera_yaw, 0);
+  let movex = 0;
+  let movez = 0;
+  if (key_down["KeyW"]) movez -= 1;
+  if (key_down["KeyS"]) movez += 1;
+  if (key_down["KeyA"]) movex -= 1;
+  if (key_down["KeyD"]) movex += 1;
+  const c = Math.cos(camera_yaw);
+  const s = Math.sin(-camera_yaw);
+  player.body.velocity.x = (movex * c - movez * s) * speed;
+  player.body.velocity.z = (movex * s + movez * c) * speed;
+  console.log(key_down)
 }
 
 export function engine_loop() {
   requestAnimationFrame(engine_loop);
+
+  engine_input();
 
   let now = performance.now();
   let dt = (now - lt) / 1000;
@@ -126,10 +150,8 @@ export function engine_loop() {
   world.step(dt);
 
   player.model.position.copy(player.body.position);
-  player.model.position.divideScalar(2);
-  player.model.position.y -= 0.95;
   player.model.quaternion.copy(player.body.quaternion);
-
+ 
   if (player) {
     player_animate(player);
     player.model.updateMatrixWorld(true);

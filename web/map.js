@@ -26,7 +26,13 @@ export async function map_init(world, scene, deg, id) {
 
     const cpart = new CANNON.Body({
       mass: 0,
-      shape: new CANNON.Box(new CANNON.Vec3(s[0], s[1], s[2]))
+      shape: new CANNON.Box(
+        new CANNON.Vec3(
+          s[0] / 2,
+          s[1] / 2,
+          s[2] / 2
+        )
+      )
     });
     cpart.position.set(p[0], p[1], p[2]);
     cpart.quaternion.setFromEuler(r[0], r[1], r[2]);
