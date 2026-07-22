@@ -1,4 +1,5 @@
 import * as THREE from "https://esm.sh/three@0.185.1";
+import * as CANNON from "https://esm.sh/cannon-es";
 import { glb_load } from "./obj.js";
 
 const texture_loader = new THREE.TextureLoader();
@@ -11,7 +12,7 @@ const mesh_map_texture = {
   2: "assets/27", // Left leg 
   3: "assets/17", // Right arm
   4: "assets/27", // Right leg
-  5: "assets/17" // Torso  
+  5: "assets/17"  // Torso  
 };
 
 export function player_obj_init_on_load(model) {
@@ -22,7 +23,6 @@ export function player_obj_init_on_load(model) {
 
 export function player_obj_init(scene, callback) {
   glb_load("assets/female.glb", (model) => {
-    scene.add(model);
     player_obj_init_on_load(model);
     if (callback) callback();
   });
@@ -45,7 +45,7 @@ export function player_init(name) {
     console.error("player model not loaded yet");
     return null;
   }
-  const player = { name, clothing: [0, 0, 0], model: player_model, id: 0, walking: true, on_ground: false, dying: 0, parts: [] };
+  const player = { name, clothing: [0, 0, 0], body: null, model: player_model, id: 0, walking: true, on_ground: false, dying: 0, parts: [] };
   let mesh_index = 0;
   player.model.traverse((child) => {
     if (child.isMesh) {
@@ -62,5 +62,12 @@ export function player_init(name) {
       player.parts[child.name] = child;
     }
   });
+  player.body = new CANNON.Body({
+    mass: 1,
+    shape: new CANNON.Box(new CANNON.Vec3(2, 2.5, 0.5))
+  });
+  player.body.fixedRotation = true;
+  player.body.updateMassProperties();
+
   return player;
 }

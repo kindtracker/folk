@@ -1,24 +1,29 @@
 import * as THREE from "https://esm.sh/three@0.185.1";
+import * as CANNON from "https://esm.sh/cannon-es";
 import { map_init } from "./map.js";
 import { player_animate, player_init, player_obj_init } from "./player.js";
 
 let player = null;
+let world = null;
 let scene = null;
 let camera = null;
 let renderer = null;
 let canvas = null;
 
-
 let camera_distance = 10;
 let camera_yaw = 0;
 let camera_pitch = 0.0;
 let mouse_down = [false, false, false];
+let key_down = {};
+
+let lt = performance.now();
 
 function deg(degrees) {
   return degrees * (Math.PI / 180);
 }
 
 export function engine_load() {
+  world = new CANNON.World({ gravity: new CANNON.Vec3(0, -9.82, 0) });
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
   renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -90,6 +95,9 @@ export function engine_load() {
 
   player_obj_init(scene, () => {
     player = player_init("test");
+    scene.add(player.model);
+    world.addBody(player.body);
+    player.body.position.set(0, 2, 0);
   });
 }
 
@@ -99,11 +107,28 @@ export async function engine_map_load(id) {
       console.log(true);
     }
   });
-  await map_init(scene, deg, 1);
+  await map_init(world, scene, deg, 1);
+}
+
+export function engine_input() {
+
 }
 
 export function engine_loop() {
   requestAnimationFrame(engine_loop);
+
+  let now = performance.now();
+  let dt = (now - lt) / 1000;
+  lt = now;
+  if (dt > 1) {
+    return;
+  }
+  world.step(dt);
+
+  player.model.position.copy(player.body.position);
+  player.model.position.divideScalar(2);
+  player.model.position.y -= 0.95;
+  player.model.quaternion.copy(player.body.quaternion);
 
   if (player) {
     player_animate(player);
