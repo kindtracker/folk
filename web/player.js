@@ -2,7 +2,6 @@ import * as THREE from "https://esm.sh/three@0.185.1";
 import { glb_load } from "./obj.js";
 
 const texture_loader = new THREE.TextureLoader();
-// const skin_texture = texture_loader.load("assets/.png");
 
 let player_model = null;
 
@@ -53,6 +52,8 @@ export function player_init(name) {
       const texture = texture_loader.load(mesh_map_texture[mesh_index]);
       texture.repeat.set(1, 1);
       texture.flipY = false;
+      child.castShadow = true;
+      child.receiveShadow = true;
       child.material = new THREE.MeshStandardMaterial({ map: texture });
       mesh_index++;
     }

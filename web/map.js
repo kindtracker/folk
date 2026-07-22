@@ -10,7 +10,7 @@ export async function map_init(scene, deg, id) {
       continue;
     }
 
-    const mat = new THREE.MeshBasicMaterial({ color: Number(`0x${partj.C}`) });
+    const mat = new THREE.MeshStandardMaterial({ color: Number(`0x${partj.C}`) });
     const geom = new THREE.BoxGeometry(partj.S[0], partj.S[1], partj.S[2]);
     const part = new THREE.Mesh(geom, mat);
     part.position.set(partj.P[0], partj.P[1], partj.P[2]);

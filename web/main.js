@@ -21,15 +21,24 @@ document.body.appendChild(renderer.domElement);
 
 camera.position.y = 6;
 
-const ambient_light = new THREE.AmbientLight(0xffffff, 0.6);
+const ambient_light = new THREE.AmbientLight(0xffffff, 0.4);
 scene.add(ambient_light);
 
-const directional_light = new THREE.DirectionalLight(0xffffff, 0.8);
-directional_light.position.set(5, 10, 7);
-directional_light.castShadow = true;
-directional_light.shadow.mapSize.width = 2048;
-directional_light.shadow.mapSize.height = 2048;
-scene.add(directional_light);
+const light = new THREE.DirectionalLight(0xffffff, 5);
+light.position.set(20, 30, 20);
+light.castShadow = true;
+
+light.shadow.mapSize.set(2048, 2048);
+
+light.shadow.camera.left = -50;
+light.shadow.camera.right = 50;
+light.shadow.camera.top = 50;
+light.shadow.camera.bottom = -50;
+light.shadow.camera.near = 1;
+light.shadow.camera.far = 100;
+
+scene.add(light);
+scene.add(light.target);
 
 document.addEventListener("mousemove", (e) => {
   if (mouse_down[2]) {
