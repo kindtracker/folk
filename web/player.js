@@ -18,7 +18,15 @@ export function player_obj_init(scene, callback) {
 }
 
 export function player_animate(player) {
-
+  const time = Date.now();
+  if (player.walking) {
+    const swing = Math.sin(time / 96) * 0.7;
+  
+    player.parts["Right_Arm"].rotation.x = swing - Math.PI/2;
+    player.parts["Left_Arm"].rotation.x = -swing - Math.PI/2; 
+    player.parts["Right_Leg"].rotation.x = -swing - Math.PI/2;
+    player.parts["Left_Leg"].rotation.x = swing - Math.PI/2; 
+  }
 }
 
 export function player_init(name) {
@@ -26,13 +34,12 @@ export function player_init(name) {
     console.error("player model not loaded yet");
     return null;
   }
-  const player = { name, clothing: [0, 0, 0], model: player_model, walking: false, head: null };
-  let head = null;
+  const player = { name, clothing: [0, 0, 0], model: player_model, id: 0, walking: true, on_ground: false, dying: 0, parts: [] };
   player.model.traverse((child) => {
-    if (child.isBone && child.name == "Head") {
-      head = child;
+    if (child.isBone) {
+      console.log("found bone:", child.name);
+      player.parts[child.name] = child;
     }
   });
-  player.head = head;
   return player;
 }

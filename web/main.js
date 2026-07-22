@@ -1,6 +1,6 @@
 import * as THREE from "https://esm.sh/three@0.185.1";
 import { map_init } from "./map.js";
-import { player_init, player_obj_init } from "./player.js";
+import { player_animate, player_init, player_obj_init } from "./player.js";
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -83,9 +83,12 @@ function animate() {
   camera.position.y = camera_target.y + camera_distance * Math.sin(camera_pitch);
   camera.position.z = camera_target.z + camera_distance * Math.cos(camera_pitch) * Math.cos(camera_yaw);
 
-  const world_pos = new THREE.Vector3();
-  player.head.getWorldPosition(world_pos);
-  camera.lookAt(world_pos);
+  player_animate(player);
+  if (player.parts["Head"]) {
+    const world_pos = new THREE.Vector3();
+    player.parts["Head"].getWorldPosition(world_pos);
+    camera.lookAt(world_pos);
+  }
 
   renderer.render(scene, camera);
 }
