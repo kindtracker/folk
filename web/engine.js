@@ -13,6 +13,7 @@ let canvas = null;
 let camera_distance = 10;
 let camera_yaw = 0;
 let camera_pitch = 0.0;
+let player_yaw = 0;
 let mouse_down = [false, false, false];
 let key_down = {};
 
@@ -61,8 +62,8 @@ export function engine_load() {
       const deltay = e.movementX || 0;
       const deltax = e.movementY || 0;
   
-      camera_pitch += deltax * 0.005;
-      camera_yaw -= deltay * 0.005;
+      camera_pitch += deltax * 0.007;
+      camera_yaw -= deltay * 0.007;
       camera_pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, camera_pitch));
     }
   });
@@ -118,35 +119,45 @@ export async function engine_map_load(id) {
   await map_init(world, scene, deg, 1);
 }
 
-export function engine_input() {
-  const speed = 50;
+export function engine_input(dt) {
+  const speed = 40;
+  const turn_speed = 10;
   player.body.velocity.x = 0;
   player.body.velocity.z = 0;
-  player.body.quaternion.setFromEuler(0, camera_yaw, 0);
+
   let movex = 0;
   let movez = 0;
   if (key_down["KeyW"]) movez -= 1;
   if (key_down["KeyS"]) movez += 1;
   if (key_down["KeyA"]) movex -= 1;
   if (key_down["KeyD"]) movex += 1;
-  const c = Math.cos(camera_yaw);
-  const s = Math.sin(-camera_yaw);
-  player.body.velocity.x = (movex * c - movez * s) * speed;
-  player.body.velocity.z = (movex * s + movez * c) * speed;
-  console.log(key_down)
+
+  if (movex != 0 || movez != 0) { 
+    const diff = Math.atan2(Math.sin(camera_yaw - player_yaw), Math.cos(camera_yaw - player_yaw));
+    player_yaw += diff * turn_speed * dt;
+    player.body.quaternion.setFromEuler(0, player_yaw, 0);
+    player.walking = true;
+  } else {
+    player.walking = false;
+  }
+
+  const length = Math.sqrt(movex * movex + movez * movez);
+  if (length > 0) { movex /= length; movez /= length; }
+
+  player.body.velocity.x = (movex * Math.cos(player_yaw) + movez * Math.sin(player_yaw)) * speed;
+  player.body.velocity.z = (-movex * Math.sin(player_yaw) + movez * Math.cos(player_yaw)) * speed;
 }
 
 export function engine_loop() {
   requestAnimationFrame(engine_loop);
-
-  engine_input();
-
+ 
   let now = performance.now();
   let dt = (now - lt) / 1000;
   lt = now;
   if (dt > 1) {
     return;
   }
+  engine_input(dt);
   world.step(dt);
 
   player.model.position.copy(player.body.position);
