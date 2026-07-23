@@ -25,12 +25,17 @@ function deg(degrees) {
 }
 
 export function engine_load() {
+  console.log("[folk] loading: engine");
+  console.log("[folk] loading: world");
   world = new CANNON.World({ gravity: new CANNON.Vec3(0, -196.2, 0) });
   world.defaultContactMaterial.friction = 0;
   world.solver.iterations = 10;
   world.broadphase = new CANNON.NaiveBroadphase();
+  console.log("[folk] loading: scene");
   scene = new THREE.Scene();
+  console.log("[folk] loading: camera");
   camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+  console.log("[folk] loading: renderer");
   renderer = new THREE.WebGLRenderer({ antialias: true });
   canvas = renderer.domElement;
 
@@ -38,29 +43,31 @@ export function engine_load() {
   renderer.setClearColor(0x7cc6e7);
   renderer.setPixelRatio(1);
   renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.BasicShadowMap;
   document.body.appendChild(renderer.domElement);
-
-  camera.position.y = 6;
-
+ 
+  console.log("[folk] loading: ambient light");
   const ambient_light = new THREE.AmbientLight(0xffffff, 0.5);
   scene.add(ambient_light);
 
+  console.log("[folk] loading: light");
   const light = new THREE.DirectionalLight(0xffffff, 5);
-  light.position.set(20, 30, 20);
+  light.position.set(200, 300, 200);
   light.castShadow = true;
 
-  light.shadow.mapSize.set(2048, 2048);
+  light.shadow.mapSize.set(8192, 8192);
 
-  light.shadow.camera.left = -50;
-  light.shadow.camera.right = 50;
-  light.shadow.camera.top = 50;
-  light.shadow.camera.bottom = -50;
+  light.shadow.camera.left = -500;
+  light.shadow.camera.right = 500;
+  light.shadow.camera.top = 500;
+  light.shadow.camera.bottom = -500;
   light.shadow.camera.near = 1;
-  light.shadow.camera.far = 100;
+  light.shadow.camera.far = 1000;
 
   scene.add(light);
   scene.add(light.target);
 
+  console.log("[folk] loading: event listeners");
   document.addEventListener("mousemove", (e) => {
     if (mouse_down[2] || shift_lock) {
       const deltay = e.movementX || 0;
@@ -114,6 +121,7 @@ export function engine_load() {
     renderer.setSize(window.innerWidth, window.innerHeight);
   });
 
+  console.log("[folk] loading: player");
   player_obj_init(scene, () => {
     player = player_init("test");
     scene.add(player.model);
@@ -123,17 +131,20 @@ export function engine_load() {
 }
 
 export async function engine_map_load(id) {
+  console.log("[folk] destroying: all parts");
   scene.traverse((obj) => {
     if (obj.isMesh) {
       scene.remove(obj);
     }
   });
+  console.log("[folk] loading: map");
   await map_init(world, scene, deg, 1);
 }
 
 export function engine_input(dt) {
   const speed = 16;
   const turn_speed = 10;
+  if (!player) return;
   player.body.velocity.x = 0;
   player.body.velocity.z = 0;
 
@@ -202,10 +213,10 @@ export function engine_loop() {
   engine_input(dt);
   world.step(dt);
 
-  player.model.position.copy(player.body.position);
-  player.model.quaternion.copy(player.body.quaternion);
- 
   if (player) {
+    player.model.position.copy(player.body.position);
+    player.model.quaternion.copy(player.body.quaternion);
+
     player_animate(player);
     player.model.updateMatrixWorld(true);
   
