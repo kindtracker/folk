@@ -55,11 +55,20 @@ export function player_init(name) {
   player.model.traverse((child) => {
     if (child.isMesh) {
       const texture = texture_loader.load("api/clothing/" + mesh_map_texture[mesh_index]);
-      texture.repeat.set(1, 1);
-      texture.flipY = false;
+
+      if (mesh_index == 0) {
+        texture.repeat.set(2, 2);
+        texture.flipY = false;
+        texture.offset.x = -0.15;
+        texture.offset.y = -0.4;
+      } else {
+        texture.repeat.set(1, 1);
+        texture.flipY = false;
+      }
       child.castShadow = true;
       child.receiveShadow = true;
-      child.material = new THREE.MeshStandardMaterial({ map: texture });
+      child.material = new THREE.MeshStandardMaterial({ map: texture,transparent: true,
+  alphaTest: 0.5 });
       mesh_index++;
     }
     if (child.isBone) {
