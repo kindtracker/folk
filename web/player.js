@@ -7,12 +7,12 @@ const texture_loader = new THREE.TextureLoader();
 let player_model = null;
 
 const mesh_map_texture = {
-  0: "assets/42", // Head
-  1: "assets/17", // Left arm
-  2: "assets/27", // Left leg 
-  3: "assets/17", // Right arm
-  4: "assets/27", // Right leg
-  5: "assets/17"  // Torso  
+  0: 42, // Head
+  1: 17, // Left arm
+  2: 27, // Left leg
+  3: 17, // Right arm
+  4: 27, // Right leg
+  5: 17  // Torso  
 };
 
 export function player_obj_init_on_load(model) {
@@ -22,7 +22,7 @@ export function player_obj_init_on_load(model) {
 }
 
 export function player_obj_init(scene, callback) {
-  glb_load("assets/male.glb", (model) => {
+  glb_load("api/objects/male.glb", (model) => {
     player_obj_init_on_load(model);
     if (callback) callback();
   });
@@ -31,7 +31,7 @@ export function player_obj_init(scene, callback) {
 export function player_animate(player) {
   const time = Date.now();
   if (player.walking) {
-    const swing = Math.sin(time / 96) * 0.7;
+    const swing = Math.sin(time / 90) * 0.7;
   
     player.parts["Right_Arm"].rotation.x = swing - Math.PI/2;
     player.parts["Left_Arm"].rotation.x = -swing - Math.PI/2; 
@@ -54,7 +54,7 @@ export function player_init(name) {
   let mesh_index = 0;
   player.model.traverse((child) => {
     if (child.isMesh) {
-      const texture = texture_loader.load(mesh_map_texture[mesh_index]);
+      const texture = texture_loader.load("api/clothing/" + mesh_map_texture[mesh_index]);
       texture.repeat.set(1, 1);
       texture.flipY = false;
       child.castShadow = true;
@@ -71,7 +71,7 @@ export function player_init(name) {
     mass: 1
   });
   player.body.addShape(
-    new CANNON.Box(new CANNON.Vec3(1, 2, 1)),
+    new CANNON.Box(new CANNON.Vec3(1, 2, 0.5)),
     new CANNON.Vec3(0, 2, 0.3)
   );
   player.body.linearDamping = 0;
