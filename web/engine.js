@@ -146,8 +146,18 @@ export function engine_input(dt) {
   if (key_down["KeyD"]) movex += 1;
   if (key_down["Space"]) movey += 1;
 
-  if (movex != 0 || movez != 0) { 
-    const diff = Math.atan2(Math.sin(camera_yaw - player_yaw), Math.cos(camera_yaw - player_yaw));
+  if (movex != 0 || movez != 0) {
+    let target_yaw = camera_yaw;
+    if (key_down["KeyW"]) target_yaw += 0;
+    if (key_down["KeyS"]) target_yaw += Math.PI;
+    if (key_down["KeyA"]) target_yaw += Math.PI/2;
+    if (key_down["KeyD"]) target_yaw += -Math.PI/2;
+    if (key_down["KeyW"] && key_down["KeyA"]) target_yaw = camera_yaw + Math.PI/4;
+    if (key_down["KeyW"] && key_down["KeyD"]) target_yaw = camera_yaw + -Math.PI/4;
+    if (key_down["KeyS"] && key_down["KeyA"]) target_yaw = camera_yaw + 3*Math.PI/4;
+    if (key_down["KeyS"] && key_down["KeyD"]) target_yaw = camera_yaw + -3*Math.PI/4;
+
+    const diff = Math.atan2(Math.sin(target_yaw - player_yaw), Math.cos(target_yaw - player_yaw));
     player_yaw += diff * turn_speed * dt;
     player.body.quaternion.setFromEuler(0, player_yaw, 0);
     player.walking = true;

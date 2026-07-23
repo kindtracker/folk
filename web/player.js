@@ -67,8 +67,7 @@ export function player_init(name) {
       }
       child.castShadow = true;
       child.receiveShadow = true;
-      child.material = new THREE.MeshStandardMaterial({ map: texture,transparent: true,
-  alphaTest: 0.5 });
+      child.material = new THREE.MeshStandardMaterial({ map: texture,transparent: false });
       mesh_index++;
     }
     if (child.isBone) {
