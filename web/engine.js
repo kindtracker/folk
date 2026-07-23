@@ -55,7 +55,7 @@ export function engine_load() {
   light.position.set(200, 300, 200);
   light.castShadow = true;
 
-  light.shadow.mapSize.set(8192, 8192);
+  light.shadow.mapSize.set(16384, 16384);
 
   light.shadow.camera.left = -500;
   light.shadow.camera.right = 500;

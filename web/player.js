@@ -15,6 +15,18 @@ const mesh_map_texture = {
   5: 17  // Torso  
 };
 
+const head_blend_shader = shader => {
+  shader.fragmentShader = shader.fragmentShader.replace('#include <color_fragment>', '');
+  shader.fragmentShader = shader.fragmentShader.replace(
+  '#include <map_fragment>',
+  `#ifdef USE_MAP
+  vec4 sampledDiffuseColor = texture2D(map, vec2(1.0 - vMapUv.x, vMapUv.y));
+  float front = 1.0;
+  diffuseColor.rgb = mix(diffuseColor.rgb, sampledDiffuseColor.rgb, sampledDiffuseColor.a * front);
+  diffuseColor.a = 1.0;
+  #endif`);
+};
+
 export function player_obj_init_on_load(model) {
   model.position.set(0, 0, 0);
   model.scale.set(1, 1, 1);
@@ -57,21 +69,24 @@ export function player_init(name) {
       const texture = texture_loader.load("api/clothing/" + mesh_map_texture[mesh_index]);
 
       if (mesh_index == 0) {
-        texture.repeat.set(2, 2);
+        texture.repeat.set(2.7, 2.7);
         texture.flipY = false;
-        texture.offset.x = -0.15;
-        texture.offset.y = -0.4;
+        texture.offset.x = -0.375;
+        texture.offset.y = -0.8;
       } else {
         texture.repeat.set(1, 1);
         texture.flipY = false;
       }
+
       child.castShadow = true;
       child.receiveShadow = true;
-      child.material = new THREE.MeshStandardMaterial({ map: texture,transparent: false });
+      child.material = new THREE.MeshStandardMaterial({ map: texture, transparent: false, vertexColors: mesh_index == 0 });
+      if (mesh_index === 0) {
+        child.material.onBeforeCompile = head_blend_shader;
+      }
       mesh_index++;
     }
     if (child.isBone) {
-      // console.log("found bone:", child.name);
       player.parts[child.name] = child;
     }
   });

@@ -7,7 +7,7 @@ const server = http.createServer(async (req, res) => {
   let filepath = path.join("web", req.url === "/" ? "index.html" : req.url);
     
   try {
-    const data = fs.readFileSync(filepath);
+    let data = fs.readFileSync(filepath);
     const ext = path.extname(filepath);
     const mime_types = {
       ".html": "text/html",
@@ -15,7 +15,7 @@ const server = http.createServer(async (req, res) => {
       ".json": "application/json",
       ".glb": "model/gltf-binary"
     };
-      
+    
     const mime_type = mime_types[ext] || "application/octet-stream";
     res.writeHead(200, { "Content-Type": mime_type });
     return res.end(data);
