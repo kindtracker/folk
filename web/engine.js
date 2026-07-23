@@ -25,6 +25,8 @@ function deg(degrees) {
 
 export function engine_load() {
   world = new CANNON.World({ gravity: new CANNON.Vec3(0, -9.82, 0) });
+  world.defaultContactMaterial.friction = 0;
+  world.solver.iterations = 10;
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
   renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -120,17 +122,19 @@ export async function engine_map_load(id) {
 }
 
 export function engine_input(dt) {
-  const speed = 40;
+  const speed = 30;
   const turn_speed = 10;
   player.body.velocity.x = 0;
   player.body.velocity.z = 0;
 
   let movex = 0;
+  let movey = 0;
   let movez = 0;
   if (key_down["KeyW"]) movez -= 1;
   if (key_down["KeyS"]) movez += 1;
   if (key_down["KeyA"]) movex -= 1;
   if (key_down["KeyD"]) movex += 1;
+  if (key_down["Space"]) movey += 1;
 
   if (movex != 0 || movez != 0) { 
     const diff = Math.atan2(Math.sin(camera_yaw - player_yaw), Math.cos(camera_yaw - player_yaw));
@@ -139,6 +143,12 @@ export function engine_input(dt) {
     player.walking = true;
   } else {
     player.walking = false;
+  }
+  if (movey == 1) {
+    player.body.velocity.y = 5;
+    player.on_ground = false;
+  } else {
+    player.on_ground = true;
   }
 
   const length = Math.sqrt(movex * movex + movez * movez);
@@ -154,7 +164,7 @@ export function engine_loop() {
   let now = performance.now();
   let dt = (now - lt) / 1000;
   lt = now;
-  if (dt > 1) {
+  if (dt > 0.1) {
     return;
   }
   engine_input(dt);

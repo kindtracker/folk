@@ -37,6 +37,11 @@ export function player_animate(player) {
     player.parts["Left_Arm"].rotation.x = -swing - Math.PI/2; 
     player.parts["Right_Leg"].rotation.x = -swing - Math.PI/2;
     player.parts["Left_Leg"].rotation.x = swing - Math.PI/2; 
+  } else {
+    player.parts["Right_Arm"].rotation.x = - Math.PI/2;
+    player.parts["Left_Arm"].rotation.x = - Math.PI/2;
+    player.parts["Right_Leg"].rotation.x = - Math.PI/2;
+    player.parts["Left_Leg"].rotation.x = - Math.PI/2;
   }
 }
 
@@ -66,9 +71,10 @@ export function player_init(name) {
     mass: 1
   });
   player.body.addShape(
-    new CANNON.Box(new CANNON.Vec3(1, 2, 0.5)),
+    new CANNON.Box(new CANNON.Vec3(1, 2, 1)),
     new CANNON.Vec3(0, 2, 0.3)
   );
+  player.body.linearDamping = 0;
   player.body.fixedRotation = true;
   player.body.updateMassProperties();
 
