@@ -1,3 +1,4 @@
+import { WebGPURenderer } from "https://esm.sh/three@0.185.1/webgpu.js";
 import * as THREE from "https://esm.sh/three@0.185.1";
 import * as CANNON from "https://esm.sh/cannon-es";
 import { map_init } from "/engine/map.js";
@@ -26,7 +27,7 @@ function deg(degrees) {
   return degrees * (Math.PI / 180);
 }
 
-export function engine_load(username) {
+export async function engine_load(username, webgpu = false) {
   console.log("[folk] loading: engine");
   console.log("[folk] loading: world");
   world = new CANNON.World({ gravity: new CANNON.Vec3(0, -196.2, 0) });
@@ -37,15 +38,29 @@ export function engine_load(username) {
   scene = new THREE.Scene();
   console.log("[folk] loading: camera");
   camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-  console.log("[folk] loading: renderer");
-  renderer = new THREE.WebGLRenderer({ antialias: true });
+  
+  console.log("[folk] loading: renderer (webgpu=" + webgpu + ")");
+  if (webgpu) {
+    console.log("[folk] loading: webgpu");
+    renderer = new WebGPURenderer({ antialias: true });
+    if (!navigator.gpu) {
+      console.error("[folk] webgpu not supported (fallback: webgl)");
+      console.log("[folk] loading: webgl");
+      renderer = new THREE.WebGLRenderer({ antialias: false });
+    } else {
+      await renderer.init();
+    }
+  } else {
+    console.log("[folk] loading: webgl");
+    renderer = new THREE.WebGLRenderer({ antialias: false });
+  }
   canvas = renderer.domElement;
 
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setClearColor(0x7cc6e7);
   renderer.setPixelRatio(1);
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.BasicShadowMap;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   document.body.appendChild(renderer.domElement);
  
   console.log("[folk] loading: ambient light");
@@ -56,13 +71,13 @@ export function engine_load(username) {
   light = new THREE.DirectionalLight(0xffffff, 5);
   light.position.set(0, 0, 0);
   light.castShadow = true;
-  light.shadow.mapSize.set(2048, 2048);
-  light.shadow.camera.left = -128;
-  light.shadow.camera.right = 128;
-  light.shadow.camera.top = 128;
-  light.shadow.camera.bottom = -128;
+  light.shadow.mapSize.set(4096, 4096);
+  light.shadow.camera.left = -1280;
+  light.shadow.camera.right = 1280;
+  light.shadow.camera.top = 1280;
+  light.shadow.camera.bottom = -1280;
   light.shadow.camera.near = 1;
-  light.shadow.camera.far = 1024;
+  light.shadow.camera.far = 2048;
 
   scene.add(light);
   scene.add(light.target);
@@ -126,7 +141,7 @@ export function engine_load(username) {
     player = player_init(username);
     scene.add(player.model);
     world.addBody(player.body);
-    player.body.position.set(0, 2, 0);
+    player.body.position.set(0, 500, 0);
     player.nametag.position.set(0, 4, 0);
     player.nametag.scale.set(10, 2.5, 10);
     scene.add(player.nametag);
@@ -207,6 +222,7 @@ export function engine_input(dt) {
 export function engine_loop() {
   requestAnimationFrame(engine_loop);
  
+  let info = renderer.info.render;
   let now = performance.now();
   let dt = (now - lt) / 1000;
   lt = now;
@@ -214,7 +230,7 @@ export function engine_loop() {
     return;
   }
   engine_input(dt);
-  world.step(dt);
+  world.step(1/60, dt, 3);
 
   if (player) {
     player.model.position.copy(player.body.position);
@@ -227,7 +243,7 @@ export function engine_loop() {
     player.model.updateMatrixWorld(true);
 
     light.position.x = player.model.position.x + 128;
-    light.position.y = player.model.position.y + 192;
+    light.position.y = player.model.position.y + 256;
     light.position.z = player.model.position.z + 128;
 
     const head_world_pos = new THREE.Vector3();

@@ -7,6 +7,9 @@ export async function map_init(world, scene, deg, id) {
   const map = await map_res.json();
   
   const groups = {};
+  const map_body = new CANNON.Body({
+    mass: 0
+  });
   for (let i = 0; i < map.length; i++) {
     const partj = map[i];
     if (partj.T == "ShirtPad") {
@@ -37,22 +40,21 @@ export async function map_init(world, scene, deg, id) {
     });
     cpart.position.set(p[0], p[1], p[2]);
     cpart.quaternion.setFromEuler(r[0], r[1], r[2]);
-    world.addBody(cpart);
+    
+    map_body.addShape(
+      new CANNON.Box(new CANNON.Vec3(s[0]/2, s[1]/2, s[2]/2)),
+      new CANNON.Vec3(p[0], p[1], p[2]),
+      new CANNON.Quaternion().setFromEuler(r[0], r[1],r[2])
+    );
   }
+  world.addBody(map_body);
 
   for (const color in groups) {
-    const merged = mergeGeometries(
-      groups[color]
-    );
+    const merged = mergeGeometries(groups[color]);
 
-    const mat = new THREE.MeshStandardMaterial({
-      color: Number(`0x${color}`)
-    });
+    const mat = new THREE.MeshStandardMaterial({color: Number(`0x${color}`)});
 
-    const mesh = new THREE.Mesh(
-      merged,
-      mat
-    );
+    const mesh = new THREE.Mesh(merged, mat);
 
     mesh.receiveShadow = true;
     mesh.castShadow = true;
