@@ -71,7 +71,7 @@ export function player_init(name) {
     console.error("player model not loaded yet");
     return null;
   }
-  const player = { name, clothing: [0, 0, 0], colors: [0, 0, 0, 0, 0, 0], body: null, model: player_model, id: 0, walking: true, on_ground: false, dying: 0, parts: [] };
+  const player = { name, nametag: null, clothing: [0, 0, 0], colors: [0, 0, 0, 0, 0, 0], body: null, model: player_model, id: 0, walking: true, on_ground: false, dying: 0, parts: [] };
   let mesh_index = 0;
   player.model.traverse((child) => {
     if (child.isMesh) {
@@ -101,6 +101,29 @@ export function player_init(name) {
       player.parts[child.name] = child;
     }
   });
+  
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  canvas.width = 1024;
+  canvas.height = 256;
+  ctx.font = '600 40px "Montserrat", system-ui, -apple-system, sans-serif';
+  ctx.textAlign = "center";
+
+  ctx.miterLimit = 2;
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = "black";
+  ctx.strokeText(name, 512, 160);
+ 
+  ctx.fillStyle = "white";
+  ctx.fillText(name, 512, 160);
+  
+  const texture = new THREE.CanvasTexture(canvas);
+  const material = new THREE.SpriteMaterial({
+    map: texture,
+    transparent: true
+  });
+  player.nametag = new THREE.Sprite(material);
+  
   player.body = new CANNON.Body({
     mass: 1
   });

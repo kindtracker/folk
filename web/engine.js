@@ -2,6 +2,7 @@ import * as THREE from "https://esm.sh/three@0.185.1";
 import * as CANNON from "https://esm.sh/cannon-es";
 import { map_init } from "./map.js";
 import { player_animate, player_init, player_obj_init } from "./player.js";
+import "./gui.js";
 
 let player = null;
 let world = null;
@@ -25,7 +26,7 @@ function deg(degrees) {
   return degrees * (Math.PI / 180);
 }
 
-export function engine_load() {
+export function engine_load(username) {
   console.log("[folk] loading: engine");
   console.log("[folk] loading: world");
   world = new CANNON.World({ gravity: new CANNON.Vec3(0, -196.2, 0) });
@@ -122,10 +123,13 @@ export function engine_load() {
 
   console.log("[folk] loading: player");
   player_obj_init(scene, () => {
-    player = player_init("test");
+    player = player_init(username);
     scene.add(player.model);
     world.addBody(player.body);
     player.body.position.set(0, 2, 0);
+    player.nametag.position.set(0, 4, 0);
+    player.nametag.scale.set(10, 2.5, 10);
+    scene.add(player.nametag);
   });
 }
 
@@ -215,6 +219,9 @@ export function engine_loop() {
   if (player) {
     player.model.position.copy(player.body.position);
     player.model.quaternion.copy(player.body.quaternion);
+    
+    player.nametag.position.copy(player.model.position);
+    player.nametag.position.y += 5.75;
 
     player_animate(player);
     player.model.updateMatrixWorld(true);
