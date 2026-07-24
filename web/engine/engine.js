@@ -2,7 +2,7 @@ import * as THREE from "https://esm.sh/three@0.185.1";
 import * as CANNON from "https://esm.sh/cannon-es";
 import { map_init } from "/engine/map.js";
 import { player_animate, player_init, player_obj_init } from "/engine/player.js";
-import "/ui/ui.js";
+import { ui_draw } from "/ui/ui.js";
 
 let player = null;
 let world = null;
@@ -67,7 +67,7 @@ export function engine_load(username) {
   scene.add(light);
   scene.add(light.target);
 
-  console.log("[folk] loading: event listeners");
+  console.log("[folk] loading: event listeners (engine)");
   document.addEventListener("mousemove", (e) => {
     if (mouse_down[2] || shift_lock) {
       const deltay = e.movementX || 0;
@@ -251,4 +251,5 @@ export function engine_loop() {
   }
 
   renderer.render(scene, camera);
+  ui_draw();
 }
