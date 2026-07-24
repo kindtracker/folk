@@ -9,6 +9,7 @@ let scene = null;
 let camera = null;
 let renderer = null;
 let canvas = null;
+let light = null;
 
 let camera_distance = 10;
 let camera_yaw = 0;
@@ -47,22 +48,20 @@ export function engine_load() {
   document.body.appendChild(renderer.domElement);
  
   console.log("[folk] loading: ambient light");
-  const ambient_light = new THREE.AmbientLight(0xffffff, 0.5);
+  const ambient_light = new THREE.AmbientLight(0xffffff, 0.75);
   scene.add(ambient_light);
 
   console.log("[folk] loading: light");
-  const light = new THREE.DirectionalLight(0xffffff, 5);
-  light.position.set(200, 300, 200);
+  light = new THREE.DirectionalLight(0xffffff, 5);
+  light.position.set(0, 0, 0);
   light.castShadow = true;
-
-  light.shadow.mapSize.set(16384, 16384);
-
-  light.shadow.camera.left = -500;
-  light.shadow.camera.right = 500;
-  light.shadow.camera.top = 500;
-  light.shadow.camera.bottom = -500;
+  light.shadow.mapSize.set(2048, 2048);
+  light.shadow.camera.left = -128;
+  light.shadow.camera.right = 128;
+  light.shadow.camera.top = 128;
+  light.shadow.camera.bottom = -128;
   light.shadow.camera.near = 1;
-  light.shadow.camera.far = 1000;
+  light.shadow.camera.far = 1024;
 
   scene.add(light);
   scene.add(light.target);
@@ -137,8 +136,8 @@ export async function engine_map_load(id) {
       scene.remove(obj);
     }
   });
-  console.log("[folk] loading: map");
-  await map_init(world, scene, deg, 1);
+  console.log("[folk] loading: map (id: " + id + ")");
+  await map_init(world, scene, deg, id);
 }
 
 export function engine_input(dt) {
@@ -219,7 +218,11 @@ export function engine_loop() {
 
     player_animate(player);
     player.model.updateMatrixWorld(true);
-  
+
+    light.position.x = player.model.position.x + 128;
+    light.position.y = player.model.position.y + 192;
+    light.position.z = player.model.position.z + 128;
+
     const head_world_pos = new THREE.Vector3();
     player.parts["Head"].getWorldPosition(head_world_pos);
     head_world_pos.y += 0.35;

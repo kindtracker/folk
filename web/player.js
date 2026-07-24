@@ -21,8 +21,17 @@ const head_blend_shader = shader => {
   '#include <map_fragment>',
   `#ifdef USE_MAP
   vec4 sampledDiffuseColor = texture2D(map, vec2(1.0 - vMapUv.x, vMapUv.y));
-  float front = 1.0;
-  diffuseColor.rgb = mix(diffuseColor.rgb, sampledDiffuseColor.rgb, sampledDiffuseColor.a * front);
+  diffuseColor.rgb = mix(diffuseColor.rgb, sampledDiffuseColor.rgb, sampledDiffuseColor.a);
+  diffuseColor.a = 1.0;
+  #endif`);
+};
+
+const blend_shader = shader => {
+  shader.fragmentShader = shader.fragmentShader.replace(
+  '#include <map_fragment>',
+  `#ifdef USE_MAP
+  vec4 sampledDiffuseColor = texture2D(map, vMapUv);
+  diffuseColor.rgb = mix(diffuseColor.rgb, sampledDiffuseColor.rgb, sampledDiffuseColor.a);
   diffuseColor.a = 1.0;
   #endif`);
 };
@@ -62,17 +71,17 @@ export function player_init(name) {
     console.error("player model not loaded yet");
     return null;
   }
-  const player = { name, clothing: [0, 0, 0], body: null, model: player_model, id: 0, walking: true, on_ground: false, dying: 0, parts: [] };
+  const player = { name, clothing: [0, 0, 0], colors: [0, 0, 0, 0, 0, 0], body: null, model: player_model, id: 0, walking: true, on_ground: false, dying: 0, parts: [] };
   let mesh_index = 0;
   player.model.traverse((child) => {
     if (child.isMesh) {
       const texture = texture_loader.load("api/clothing/" + mesh_map_texture[mesh_index]);
 
       if (mesh_index == 0) {
-        texture.repeat.set(2.7, 2.7);
+        texture.repeat.set(2.8, 2.8);
         texture.flipY = false;
-        texture.offset.x = -0.375;
-        texture.offset.y = -0.8;
+        texture.offset.x = -0.4;
+        texture.offset.y = -0.815;
       } else {
         texture.repeat.set(1, 1);
         texture.flipY = false;
@@ -83,6 +92,8 @@ export function player_init(name) {
       child.material = new THREE.MeshStandardMaterial({ map: texture, transparent: false, vertexColors: mesh_index == 0 });
       if (mesh_index === 0) {
         child.material.onBeforeCompile = head_blend_shader;
+      } else {
+        child.material.onBeforeCompile = blend_shader;
       }
       mesh_index++;
     }
