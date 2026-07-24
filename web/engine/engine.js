@@ -4,31 +4,40 @@ import * as CANNON from "https://esm.sh/cannon-es";
 import { map_init } from "/engine/map.js";
 import { player_animate, player_init, player_obj_init } from "/engine/player.js";
 import { ui_draw } from "/ui/ui.js";
+import { me } from "/main.js";
 
-let player = null;
-let world = null;
-let scene = null;
-let camera = null;
-let renderer = null;
-let canvas = null;
+export let world = null;
+export let scene = null;
+export let camera = null;
+export let renderer = null;
+export let game_canvas = null;
 let light = null;
+
+export let player = null;
 
 let camera_distance = 10;
 let camera_yaw = 0;
 let camera_pitch = 0.0;
 let player_yaw = 0;
-let mouse_down = [false, false, false];
-let key_down = {};
-let shift_lock = false;
 
+export let camera_sens = 0.007;
+export let mouse_down = [false, false, false];
+export let key_down = {};
+export let shift_lock = false;
+
+export let width;
+export let height;
 let lt = performance.now();
 
 function deg(degrees) {
   return degrees * (Math.PI / 180);
 }
 
-export async function engine_load(username, webgpu = false) {
+export async function engine_load(webgpu = false) {
   console.log("[folk] loading: engine");
+  width = window.innerWidth;
+  height = window.innerHeight;
+
   console.log("[folk] loading: world");
   world = new CANNON.World({ gravity: new CANNON.Vec3(0, -196.2, 0) });
   world.defaultContactMaterial.friction = 0;
@@ -54,13 +63,13 @@ export async function engine_load(username, webgpu = false) {
     console.log("[folk] loading: webgl");
     renderer = new THREE.WebGLRenderer({ antialias: false });
   }
-  canvas = renderer.domElement;
+  game_canvas = renderer.domElement;
 
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setClearColor(0x7cc6e7);
   renderer.setPixelRatio(1);
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.type = THREE.PCFShadowMap;
   document.body.appendChild(renderer.domElement);
  
   console.log("[folk] loading: ambient light");
@@ -88,8 +97,8 @@ export async function engine_load(username, webgpu = false) {
       const deltay = e.movementX || 0;
       const deltax = e.movementY || 0;
   
-      camera_pitch += deltax * 0.007;
-      camera_yaw -= deltay * 0.007;
+      camera_pitch += deltax * camera_sens;
+      camera_yaw -= deltay * camera_sens;
       camera_pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, camera_pitch));
     }
   });
@@ -131,6 +140,8 @@ export async function engine_load(username, webgpu = false) {
   }, { passive: false });
 
   window.addEventListener("resize", () => {
+    width = window.innerWidth;
+    height = window.innerHeight;
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -138,7 +149,7 @@ export async function engine_load(username, webgpu = false) {
 
   console.log("[folk] loading: player");
   player_obj_init(scene, () => {
-    player = player_init(username);
+    player = player_init(me.username);
     scene.add(player.model);
     world.addBody(player.body);
     player.body.position.set(0, 500, 0);
@@ -156,7 +167,7 @@ export async function engine_map_load(id) {
     }
   });
   console.log("[folk] loading: map (id: " + id + ")");
-  await map_init(world, scene, deg, id);
+  await map_init(deg, id);
 }
 
 export function engine_input(dt) {
