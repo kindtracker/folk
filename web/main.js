@@ -1,4 +1,4 @@
-import { engine_load, engine_map_load, engine_loop } from "./engine.js";
+import { engine_load, engine_map_load, engine_loop } from "/engine/engine.js";
 
 const me_res = await fetch("/api/me");
 const me = await me_res.json();

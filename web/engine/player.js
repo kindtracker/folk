@@ -1,6 +1,6 @@
 import * as THREE from "https://esm.sh/three@0.185.1";
 import * as CANNON from "https://esm.sh/cannon-es";
-import { glb_load } from "./obj.js";
+import { glb_load } from "/engine/obj.js";
 
 const texture_loader = new THREE.TextureLoader();
 

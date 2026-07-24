@@ -1,8 +1,8 @@
 import * as THREE from "https://esm.sh/three@0.185.1";
 import * as CANNON from "https://esm.sh/cannon-es";
-import { map_init } from "./map.js";
-import { player_animate, player_init, player_obj_init } from "./player.js";
-import "./gui.js";
+import { map_init } from "/engine/map.js";
+import { player_animate, player_init, player_obj_init } from "/engine/player.js";
+import "/ui/ui.js";
 
 let player = null;
 let world = null;
