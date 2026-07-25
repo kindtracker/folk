@@ -7,6 +7,7 @@ const server = http.createServer(async (req, res) => {
   const pathname = url.pathname;
   const parts = pathname.split("/");
   let filepath = path.join("web", pathname === "/" ? "index.html" : pathname);
+  console.log(`[folk] url: ${url} pathname: ${pathname}`);
 
   try {
     let data = fs.readFileSync(filepath);
@@ -28,5 +29,5 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(80, () => {
-  console.log("server listening: http://127.0.0.1:80");
+  console.log("[folk] server listening: http://127.0.0.1:80");
 });

@@ -26,6 +26,7 @@ export let mouse_down = [false, false, false];
 export let key_down = {};
 export let shift_lock = false;
 
+export let f1_toggle = false;
 export let width;
 export let height;
 let lt = performance.now();
@@ -140,6 +141,21 @@ export async function engine_load(webgpu = false) {
         document.body.requestPointerLock();
       } else {
         document.exitPointerLock();
+      }
+    } else if (code == "F1") {
+      f1_toggle = !f1_toggle;
+      if (f1_toggle) {
+        scene.traverse((obj) => {
+          if (obj.isMesh) {
+            obj.material.wireframe = true;
+          }
+        });
+      } else {
+        scene.traverse((obj) => {
+          if (obj.isMesh) {
+            obj.material.wireframe = false;
+          }
+        });
       }
     } else if (code == "Slash") {
       e.preventDefault();
@@ -266,6 +282,7 @@ export function engine_input(dt) {
   player.body.velocity.x = (movex * Math.cos(camera_yaw) + movez * Math.sin(camera_yaw)) * speed;
   player.body.velocity.z = (-movex * Math.sin(camera_yaw) + movez * Math.cos(camera_yaw)) * speed;
 
+  /*
   const dir = new CANNON.Vec3(player.body.velocity.x, 0, player.body.velocity.z);
   dir.normalize();
   let from = player.body.position.vadd(new CANNON.Vec3(0, -1.5, 0));
@@ -295,7 +312,17 @@ export function engine_input(dt) {
       player.body.position.y += 1;
       console.log(Date.now());
     }
-  }
+  }*/
+}
+
+export function smooth_move(object, dt, target, speed = 5) {
+  object.position.lerp(target, speed * dt);
+}
+
+export function smooth_rot(object, dt, target, speed = 5) {
+  object.rotation.x += (target.x - object.rotation.x) * speed * dt;
+  object.rotation.y += (target.y - object.rotation.y) * speed * dt;
+  object.rotation.z += (target.z - object.rotation.z) * speed * dt;
 }
 
 export function engine_loop() {
@@ -318,7 +345,7 @@ export function engine_loop() {
     player.nametag.position.copy(player.model.position);
     player.nametag.position.y += 5.75;
 
-    player_animate(player);
+    player_animate(player, dt);
     player.model.updateMatrixWorld(true);
 
     light.position.x = player.model.position.x + 128;

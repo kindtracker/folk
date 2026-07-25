@@ -1,6 +1,7 @@
 import * as THREE from "https://esm.sh/three@0.185.1";
 import * as CANNON from "https://esm.sh/cannon-es";
 import { glb_load } from "/engine/obj.js";
+import { smooth_move, smooth_rot } from "/engine/engine.js";
 
 const texture_loader = new THREE.TextureLoader();
 
@@ -49,21 +50,18 @@ export function player_obj_init(scene, callback) {
   });
 }
 
-export function player_animate(player) {
+export function player_animate(player, dt) {
   const time = Date.now();
-  if (player.walking) {
-    const swing = Math.sin(time / 90) * 0.7;
   
-    player.parts["Right_Arm"].rotation.x = swing - Math.PI/2;
-    player.parts["Left_Arm"].rotation.x = -swing - Math.PI/2; 
-    player.parts["Right_Leg"].rotation.x = -swing - Math.PI/2;
-    player.parts["Left_Leg"].rotation.x = swing - Math.PI/2; 
-  } else {
-    player.parts["Right_Arm"].rotation.x = - Math.PI/2;
-    player.parts["Left_Arm"].rotation.x = - Math.PI/2;
-    player.parts["Right_Leg"].rotation.x = - Math.PI/2;
-    player.parts["Left_Leg"].rotation.x = - Math.PI/2;
+  let swing = Math.PI;
+  if (player.walking) {
+    swing += Math.sin(time / 90) * 1.25;
   }
+
+  smooth_rot(player.parts["Right_Arm"], dt, new THREE.Vector3(swing - Math.PI / 2, Math.PI, 0));
+  smooth_rot(player.parts["Left_Arm"], dt, new THREE.Vector3(-swing - Math.PI / 2, Math.PI, 0));
+  smooth_rot(player.parts["Right_Leg"], dt, new THREE.Vector3(-swing - Math.PI / 2, Math.PI, 0));
+  smooth_rot(player.parts["Left_Leg"], dt, new THREE.Vector3(swing - Math.PI / 2, Math.PI, 0));
 }
 
 export function player_init(name) {
