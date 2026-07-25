@@ -9,6 +9,17 @@ export let chat_old_toggle = false;
 export let chat_width = 80*4;
 export let chat_height = 60*4;
 
+export let ucolors = [
+  "#fd2943",
+  "#01a2ff",
+  "#02b857",
+  "#7c5cff",
+  "#ff7f00",
+  "#ffd500",
+  "#ff98dc",
+  "#d7c06a"
+];
+
 export function chat_init() {
   console.log("[folk] loading: chat");
   chat_input = document.createElement("input");
@@ -21,7 +32,7 @@ export function chat_init() {
   chat_input.style.background = "#00000040";
   chat_input.style.outline = "none";
   chat_input.style.color = "white";
-  chat_input.style.font = '500 14px "Montserrat", system-ui, -apple-system, sans-serif';
+  chat_input.style.font = '400 14px "Montserrat", system-ui, -apple-system, sans-serif';
   chat_input.style.padding = "4px";
   chat_input.style.left = "17px";
   chat_input.style.top = `${chat_height + 14}px`;
@@ -35,7 +46,7 @@ export function chat_init() {
       const text = chat_input.value.trim();
 
       if (text) {
-        chat_message(me.username, `${me.username}: ${text}`);
+        chat_message(me.username, chat_input.value.trim());
         chat_input.value = "";
       }
       chat_input.blur();
@@ -45,15 +56,27 @@ export function chat_init() {
 
 export function chat_message(username, text) {
   chat.messages.push({
+    username,
     text,
-    time: Date.now(),
-    username
+    time: Date.now()
   });
 
   if (chat.messages.length > 50) {
     chat.messages.shift();
   }
   chat.scroll = Math.max(0, chat_get_height() - chat_height + 50);
+}
+
+export function chat_get_ucolor(username) {
+  let value = 0;
+  for (let i = 0; i < name.length; i++) {
+    let chr = name.charCodeAt(i);
+    let reverse_idx = name.length - i;
+    if (name.length & 1) reverse_idx--;
+    if (reverse_idx % 4 >= 2) chr = -cht;
+    value += chr;
+  }
+  return ucolors[((value % ucolors.length) + ucolors.length) % ucolors.length];
 }
 
 export function chat_draw() {
@@ -65,15 +88,23 @@ export function chat_draw() {
     chat_input.style.display = "block";
 
     ctx.fillStyle = "white";
-    ctx.font = '500 14px "Montserrat", system-ui, -apple-system, sans-serif';
+    ctx.font = '400 14px "Montserrat", system-ui, -apple-system, sans-serif';
     let y = 75;
     for (const msg of chat.messages) {
+      const p = `[${msg.username}] ${msg.text}`;
       const lines = wrap_text(msg.text, chat_width - 18);
 
       for (const line of lines) {
         console.log(y)
         if (y-chat.scroll >= 50) {
-          ctx.fillText(line, 18, y-chat.scroll);
+          const prefix = `[${msg.username}]: `;
+          const color = chat_get_ucolor(msg.username);
+          ctx.fillStyle = color;
+          ctx.fillText(prefix, 18, y - chat.scroll);
+
+          const x = ctx.measureText(prefix).width;
+          ctx.fillStyle = "white";
+          ctx.fillText(line, 18+x, y-chat.scroll);
         }
         y += 18;
       }
