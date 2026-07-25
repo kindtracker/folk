@@ -1,7 +1,7 @@
 import * as THREE from "https://esm.sh/three@0.185.1";
 import * as CANNON from "https://esm.sh/cannon-es";
 import { glb_load } from "/engine/obj.js";
-import { smooth_move, smooth_rot } from "/engine/engine.js";
+import { smooth_move, smooth_rot } from "/engine/folk-engine.js";
 
 const texture_loader = new THREE.TextureLoader();
 
@@ -55,7 +55,7 @@ export function player_animate(player, dt) {
   
   let swing = Math.PI;
   if (player.walking) {
-    swing += Math.sin(time / 90) * 1.25;
+    swing += Math.sin(time / 90) * Math.PI/2;
   }
 
   smooth_rot(player.parts["Right_Arm"], dt, new THREE.Vector3(swing - Math.PI / 2, Math.PI, 0));

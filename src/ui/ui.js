@@ -1,5 +1,5 @@
-import { chat_init, chat_draw, chat_toggle, chat_old_toggle } from "/ui/chat.js";
-import { width, height } from "/engine/engine.js";
+import { chat_init, chat_draw, chat_toggle, chat_old_toggle, mchat_toggle, mchat_old_toggle } from "/ui/chat.js";
+import { width, height } from "/engine/folk-engine.js";
 
 export let canvas = null;
 export let ctx = null;
@@ -43,16 +43,16 @@ export function ui_load() {
     if (x >= 8 && x <= 48 && y >= 8 && y <= 48) {
       menu_toggle = !menu_toggle;
       if (menu_toggle == false) {
-        chat_toggle = chat_old_toggle;
+        mchat_toggle(chat_old_toggle);
       } else {
-        chat_old_toggle = chat_toggle;
-        chat_toggle = false;
+        mchat_old_toggle(chat_toggle);
+        mchat_toggle(false);
       }
     }
     if (x >= 8+45 && x <= 48+45 && y >= 8 && y <= 48) {
-      chat_toggle = !chat_toggle;  
+      mchat_toggle(!chat_toggle);  
       if (chat_toggle) {
-          chat_input.focus();
+        chat_input.focus();
       }
     }
   });

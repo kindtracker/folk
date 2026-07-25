@@ -1,0 +1,10 @@
+{
+  "scripts": {
+    "build": "node build.js",
+    "run": "node folk.js"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.1",
+    "javascript-obfuscator": "^5.5.0"
+  }
+}

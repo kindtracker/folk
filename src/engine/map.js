@@ -1,7 +1,7 @@
 import { mergeGeometries } from "https://esm.sh/three@0.185.1/examples/jsm/utils/BufferGeometryUtils.js";
 import * as THREE from "https://esm.sh/three@0.185.1";
 import * as CANNON from "https://esm.sh/cannon-es";
-import { world, scene, stud, stud_scale, group_map, group_player } from "/engine/engine.js";
+import { world, scene, stud, stud_scale, group_map, group_player } from "/engine/folk-engine.js";
 
 export async function map_init(deg, id) {
   const map_res = await fetch(`/api/maps/${id}`);

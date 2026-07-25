@@ -1,5 +1,5 @@
 import { canvas, ctx, wrap_text } from "/ui/ui.js";
-import { width, height } from "/engine/engine.js";
+import { width, height } from "/engine/folk-engine.js";
 import { me } from "/main.js";
 
 export let chat = {messages: [], scroll: 0};
@@ -123,4 +123,12 @@ function chat_get_height() {
   }
 
   return height;
+}
+
+export function mchat_toggle(value) {
+  chat_toggle = value;
+}
+
+export function mchat_old_toggle(value) {
+  chat_old_toggle = value;
 }
