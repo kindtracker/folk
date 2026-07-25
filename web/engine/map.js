@@ -1,10 +1,10 @@
 import { mergeGeometries } from "https://esm.sh/three@0.185.1/examples/jsm/utils/BufferGeometryUtils.js";
 import * as THREE from "https://esm.sh/three@0.185.1";
 import * as CANNON from "https://esm.sh/cannon-es";
-import { world, scene, stud, stud_scale } from "/engine/engine.js";
+import { world, scene, stud, stud_scale, group_map, group_player } from "/engine/engine.js";
 
 export async function map_init(deg, id) {
-  const map_res = await fetch(`http://127.0.0.1:80/api/maps/${id}`);
+  const map_res = await fetch(`/api/maps/${id}`);
   const map = await map_res.json();
   
   const groups = {};
@@ -83,6 +83,8 @@ export async function map_init(deg, id) {
       new CANNON.Quaternion().setFromEuler(r[0], r[1],r[2])
     );
   }
+  map_body.collisionFilterGroup = group_map;
+  map_body.collisionFilterMask = group_player;
   world.addBody(map_body);
 
   for (const color in groups) {

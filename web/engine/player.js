@@ -43,7 +43,7 @@ export function player_obj_init_on_load(model) {
 }
 
 export function player_obj_init(scene, callback) {
-  glb_load("api/objects/male.glb", (model) => {
+  glb_load("/api/objects/male.glb", (model) => {
     player_obj_init_on_load(model);
     if (callback) callback();
   });

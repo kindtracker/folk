@@ -33,6 +33,9 @@ let lt = performance.now();
 export let stud = null;
 export let stud_scale = 4;
 
+export const group_player = 1;
+export const group_map = 2;
+
 function deg(degrees) {
   return degrees * (Math.PI / 180);
 }
@@ -142,8 +145,10 @@ export async function engine_load(webgpu = false) {
       e.preventDefault();
       chat_input.focus();
     } else if (code == "Comma") {
+      camera_yaw = Math.round(camera_yaw / (Math.PI / 4)) * (Math.PI / 4);
       camera_yaw += Math.PI / 4;
     } else if (code == "Period") {
+      camera_yaw = Math.round(camera_yaw / (Math.PI / 4)) * (Math.PI / 4);
       camera_yaw += Math.PI / -4;
     }
   });
@@ -250,7 +255,7 @@ export function engine_input(dt) {
       }
     }
   }
-
+  
   if (movey == 1 && player.on_ground) {
     player.body.velocity.y = 50;
   }
@@ -260,6 +265,37 @@ export function engine_input(dt) {
 
   player.body.velocity.x = (movex * Math.cos(camera_yaw) + movez * Math.sin(camera_yaw)) * speed;
   player.body.velocity.z = (-movex * Math.sin(camera_yaw) + movez * Math.cos(camera_yaw)) * speed;
+
+  const dir = new CANNON.Vec3(player.body.velocity.x, 0, player.body.velocity.z);
+  dir.normalize();
+  let from = player.body.position.vadd(new CANNON.Vec3(0, -1.5, 0));
+  let to = from.vadd(dir.scale(4));
+  let ray = new CANNON.Ray(from, to);
+  let result = new CANNON.RaycastResult();
+  ray.intersectWorld(world, {
+    mode: CANNON.Ray.CLOSEST,
+    result,
+    collisionFilterMask: group_map
+  });
+  if (result.hasHit) {
+    console.log("obstacle ahead!");
+    from = from.vadd(new CANNON.Vec3(0, -0.5, 0));
+    to = to.vadd(new CANNON.Vec3(0, 1.5, 0));
+    ray = new CANNON.Ray(from, to);
+    result = new CANNON.RaycastResult();
+
+    ray.intersectWorld(world, {
+      mode: CANNON.Ray.CLOSEST,
+      result: result,
+      collisionFilterMask: group_map
+    });
+
+    console.log(Date.now(), result.hasHit)
+    if (result.hasHit) {
+      player.body.position.y += 1;
+      console.log(Date.now());
+    }
+  }
 }
 
 export function engine_loop() {
