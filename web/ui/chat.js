@@ -95,7 +95,6 @@ export function chat_draw() {
       const lines = wrap_text(msg.text, chat_width - 18);
 
       for (const line of lines) {
-        console.log(y)
         if (y-chat.scroll >= 50) {
           const prefix = `[${msg.username}]: `;
           const color = chat_get_ucolor(msg.username);

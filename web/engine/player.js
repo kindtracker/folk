@@ -123,6 +123,8 @@ export function player_init(name) {
     transparent: true
   });
   player.nametag = new THREE.Sprite(material);
+  player.nametag.renderOrder = 1000;
+  player.nametag.material.depthWrite = false;
   
   player.body = new CANNON.Body({
     mass: 1

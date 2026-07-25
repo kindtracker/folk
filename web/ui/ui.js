@@ -23,7 +23,7 @@ export function ui_load() {
   document.body.appendChild(canvas);
   ctx = canvas.getContext("2d");
 
-  console.log("[folk] loading: images");
+  console.log("[folk] loading: images (ui)");
   console.log("[folk] loading: folk logo (image)");
   logo = new Image();
   logo.src = "/api/images/logo.png";

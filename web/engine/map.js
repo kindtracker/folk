@@ -1,7 +1,7 @@
 import { mergeGeometries } from "https://esm.sh/three@0.185.1/examples/jsm/utils/BufferGeometryUtils.js";
 import * as THREE from "https://esm.sh/three@0.185.1";
 import * as CANNON from "https://esm.sh/cannon-es";
-import { world, scene } from "/engine/engine.js";
+import { world, scene, stud, stud_scale } from "/engine/engine.js";
 
 export async function map_init(deg, id) {
   const map_res = await fetch(`http://127.0.0.1:80/api/maps/${id}`);
@@ -11,6 +11,7 @@ export async function map_init(deg, id) {
   const map_body = new CANNON.Body({
     mass: 0
   });
+
   for (let i = 0; i < map.length; i++) {
     const partj = map[i];
     if (partj.T == "ShirtPad") {
@@ -20,14 +21,48 @@ export async function map_init(deg, id) {
     const p = partj.P;
     const r = [deg(partj.R[0]), deg(partj.R[1]), deg(partj.R[2])];
     const s = partj.S;
-    if (!groups[partj.C]) groups[partj.C] = [];
+    if (!groups[partj.C]) groups[partj.C] = {sides: [], studs: []};
 
     const geom = new THREE.BoxGeometry(s[0], s[1], s[2]);
     geom.rotateX(r[0]);
     geom.rotateY(r[1]);
     geom.rotateZ(r[2]);
     geom.translate(p[0], p[1], p[2]);
-    groups[partj.C].push(geom);
+    
+    const top = new THREE.PlaneGeometry(s[0], s[2]);
+    top.rotateX(-Math.PI / 2);
+    top.translate(0, s[1] / 2, 0);
+    const bottom = new THREE.PlaneGeometry(s[0], s[2]);
+    bottom.rotateX(Math.PI / 2);
+    bottom.translate(0, -s[1] / 2, 0);
+
+    top.rotateX(r[0]);
+    top.rotateY(r[1]);
+    top.rotateZ(r[2]);
+    top.translate(p[0], p[1], p[2]);
+
+    let uv = top.attributes.uv;
+    uv.setXY(0, 0, 0);
+    uv.setXY(1, s[0] / stud_scale, 0);
+    uv.setXY(2, 0, s[2] / stud_scale);
+    uv.setXY(3, s[0] / stud_scale, s[2] / stud_scale);
+    uv.needsUpdate = true;
+    
+    uv = bottom.attributes.uv;
+    uv.setXY(0, 0, 0);
+    uv.setXY(1, s[0] / stud_scale, 0);
+    uv.setXY(2, 0, s[2] / stud_scale);
+    uv.setXY(3, s[0] / stud_scale, s[2] / stud_scale);
+    uv.needsUpdate = true;
+
+    bottom.rotateX(r[0]);
+    bottom.rotateY(r[1]);
+    bottom.rotateZ(r[2]);
+    bottom.translate(p[0], p[1], p[2]);
+
+    groups[partj.C].studs.push(top);
+    groups[partj.C].studs.push(bottom);
+    groups[partj.C].sides.push(geom);
 
     const cpart = new CANNON.Body({
       mass: 0,
@@ -51,15 +86,26 @@ export async function map_init(deg, id) {
   world.addBody(map_body);
 
   for (const color in groups) {
-    const merged = mergeGeometries(groups[color]);
+    const merged_side = mergeGeometries(groups[color].sides);
+    const merged_stud = mergeGeometries(groups[color].studs);
 
-    const mat = new THREE.MeshStandardMaterial({color: Number(`0x${color}`)});
+    const side_mat = new THREE.MeshStandardMaterial({
+      color: Number(`0x${color}`)
+    });
 
-    const mesh = new THREE.Mesh(merged, mat);
+    const stud_mat = new THREE.MeshStandardMaterial({
+      map: stud,
+      transparent: true,
+      color: Number(`0x${color}`)
+    });
 
-    mesh.receiveShadow = true;
-    mesh.castShadow = true;
-
-    scene.add(mesh);
+    const mesh_side = new THREE.Mesh(merged_side, side_mat);
+    const mesh_stud = new THREE.Mesh(merged_stud, stud_mat);
+    mesh_side.receiveShadow = true;
+    mesh_side.castShadow = true;
+    mesh_stud.receiveShadow = true;
+    mesh_stud.castShadow = true;
+    scene.add(mesh_side);
+    scene.add(mesh_stud);
   }
 }

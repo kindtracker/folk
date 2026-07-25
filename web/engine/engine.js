@@ -30,6 +30,9 @@ export let width;
 export let height;
 let lt = performance.now();
 
+export let stud = null;
+export let stud_scale = 4;
+
 function deg(degrees) {
   return degrees * (Math.PI / 180);
 }
@@ -74,7 +77,7 @@ export async function engine_load(webgpu = false) {
   document.body.appendChild(renderer.domElement);
  
   console.log("[folk] loading: ambient light");
-  const ambient_light = new THREE.AmbientLight(0xffffff, 0.75);
+  const ambient_light = new THREE.AmbientLight(0xffffff, 0.85);
   scene.add(ambient_light);
 
   console.log("[folk] loading: light");
@@ -91,6 +94,13 @@ export async function engine_load(webgpu = false) {
 
   scene.add(light);
   scene.add(light.target);
+
+  console.log("[folk] loading: textures (engine)");
+  console.log("[folk] loading: stud (texture)");
+  stud = new THREE.TextureLoader().load("/api/images/stud.png", (texture) => {
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+  });
 
   console.log("[folk] loading: event listeners (engine)");
   document.addEventListener("mousemove", (e) => {
