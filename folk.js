@@ -3,9 +3,11 @@ import fs from "fs";
 import path from "path";
 
 const server = http.createServer(async (req, res) => {
-  const parts = req.url.split("/");
-  let filepath = path.join("web", req.url === "/" ? "index.html" : req.url);
-    
+  const url = new URL(req.url, "http://localhost");
+  const pathname = url.pathname;
+  const parts = pathname.split("/");
+  let filepath = path.join("web", pathname === "/" ? "index.html" : pathname);
+
   try {
     let data = fs.readFileSync(filepath);
     const ext = path.extname(filepath);

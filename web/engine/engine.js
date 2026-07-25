@@ -131,6 +131,10 @@ export async function engine_load(webgpu = false) {
     } else if (code == "Slash") {
       e.preventDefault();
       chat_input.focus();
+    } else if (code == "Comma") {
+      camera_yaw += Math.PI / 4;
+    } else if (code == "Period") {
+      camera_yaw += Math.PI / -4;
     }
   });
 
