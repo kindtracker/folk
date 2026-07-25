@@ -1,11 +1,9 @@
-import { chat_draw } from "/ui/chat.js";
+import { chat_init, chat_draw, chat_toggle, chat_old_toggle } from "/ui/chat.js";
 import { width, height } from "/engine/engine.js";
 
 export let canvas = null;
 export let ctx = null;
 export let menu_toggle = false;
-let chat_toggle = true;
-let old_chat_toggle = false;
 
 export let logo = null;
 export let icon = null;
@@ -45,17 +43,21 @@ export function ui_load() {
     if (x >= 8 && x <= 48 && y >= 8 && y <= 48) {
       menu_toggle = !menu_toggle;
       if (menu_toggle == false) {
-        console.log(old_chat_toggle)
-        chat_toggle = old_chat_toggle;
+        chat_toggle = chat_old_toggle;
       } else {
-        old_chat_toggle = chat_toggle;
+        chat_old_toggle = chat_toggle;
         chat_toggle = false;
       }
     }
     if (x >= 8+45 && x <= 48+45 && y >= 8 && y <= 48) {
       chat_toggle = !chat_toggle;  
+      if (chat_toggle) {
+          chat_input.focus();
+      }
     }
   });
+
+  chat_init();
 }
 
 export function ui_draw() {
@@ -73,17 +75,7 @@ export function ui_draw() {
 
   ctx.drawImage(icon, 15, 16, 26, 26);
 
-  if (chat_toggle) {
-    let right = (width/14)*3;
-    let bottom = (height/9)*3;
-    ctx.beginPath();
-    ctx.roundRect(10, 55, right, bottom, [4, 4, 4, 4]);
-    ctx.fill();
-
-    ctx.beginPath();
-    ctx.roundRect(17, bottom+20, right-14, 24, [4, 4, 4, 4]);
-    ctx.fill();
-  }
+  chat_draw();
 
   if (menu_toggle) {
     ctx.fillStyle = "#00000080";
@@ -93,4 +85,28 @@ export function ui_draw() {
 
     ctx.drawImage(logo, width/5+width/6.5, height/9, width/7*2, height/6);
   }
+}
+
+export function wrap_text(text, maxWidth) {
+  const lines = [];
+  let line = "";
+
+  for (const ch of text) {
+    if (ch === "\n") {
+      lines.push(line);
+      line = "";
+      continue;
+    }
+    const test = line + ch;
+    if (ctx.measureText(test).width <= maxWidth) {
+      line = test;
+    } else {
+      if (line) lines.push(line);
+      line = ch;
+    }
+  }
+  if (line) {
+    lines.push(line);
+  }
+  return lines;
 }

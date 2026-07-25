@@ -1,13 +1,96 @@
-import { canvas, ctx } from "/ui/ui.js";
+import { canvas, ctx, wrap_text } from "/ui/ui.js";
+import { width, height } from "/engine/engine.js";
+import { me } from "/main.js";
 
-export function chat_init(username) {
+export let chat = {messages: [], scroll: 0};
+export let chat_input = null;
+export let chat_toggle = true;
+export let chat_old_toggle = false;
+export let chat_width = 80*4;
+export let chat_height = 60*4;
 
+export function chat_init() {
+  console.log("[folk] loading: chat");
+  chat_input = document.createElement("input");
+  chat_input.type = "text";
+  chat_input.placeholder = "Type a message...";
+  chat_input.style.borderRadius = "4px";
+  chat_input.style.position = "fixed";
+  chat_input.style.zIndex = "1001";
+  chat_input.style.display = "none";
+  chat_input.style.background = "#00000040";
+  chat_input.style.outline = "none";
+  chat_input.style.color = "white";
+  chat_input.style.font = '500 14px "Montserrat", system-ui, -apple-system, sans-serif';
+  chat_input.style.padding = "4px";
+  chat_input.style.left = "17px";
+  chat_input.style.top = `${chat_height + 14}px`;
+  chat_input.style.width = `${chat_width - 22}px`;
+  chat_input.style.height = "24px";
+  document.body.appendChild(chat_input);
+
+  console.log("[folk] loading: event listeners (chat)");
+  chat_input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      const text = chat_input.value.trim();
+
+      if (text) {
+        chat_message(me.username, `${me.username}: ${text}`);
+        chat_input.value = "";
+      }
+      chat_input.blur();
+    }
+  });
 }
 
-export function chat_message(text) {
+export function chat_message(username, text) {
+  chat.messages.push({
+    text,
+    time: Date.now(),
+    username
+  });
 
+  if (chat.messages.length > 50) {
+    chat.messages.shift();
+  }
+  chat.scroll = Math.max(0, chat_get_height() - chat_height + 50);
 }
 
-export function chat_draw(text) {
+export function chat_draw() {
+  if (chat_toggle) {
+    ctx.fillStyle = "#00000064";
+    ctx.beginPath();
+    ctx.roundRect(10, 55, chat_width, chat_height, [4, 4, 4, 4]);
+    ctx.fill();
+    chat_input.style.display = "block";
 
+    ctx.fillStyle = "white";
+    ctx.font = '500 14px "Montserrat", system-ui, -apple-system, sans-serif';
+    let y = 75;
+    for (const msg of chat.messages) {
+      const lines = wrap_text(msg.text, chat_width - 18);
+
+      for (const line of lines) {
+        console.log(y)
+        if (y-chat.scroll >= 50) {
+          ctx.fillText(line, 18, y-chat.scroll);
+        }
+        y += 18;
+      }
+      y += 4; 
+    }
+  } else {
+   chat_input.style.display = "none";
+  }
+}
+
+function chat_get_height() {
+  let height = 0;
+
+  for (const msg of chat.messages) {
+    const lines = wrap_text(msg.text, chat_width - 18);
+    height += lines.length * 18 + 4;
+  }
+
+  return height;
 }

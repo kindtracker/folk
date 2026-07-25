@@ -4,6 +4,7 @@ import * as CANNON from "https://esm.sh/cannon-es";
 import { map_init } from "/engine/map.js";
 import { player_animate, player_init, player_obj_init } from "/engine/player.js";
 import { ui_draw } from "/ui/ui.js";
+import { chat_input } from "/ui/chat.js";
 import { me } from "/main.js";
 
 export let world = null;
@@ -17,7 +18,7 @@ export let player = null;
 
 let camera_distance = 10;
 let camera_yaw = 0;
-let camera_pitch = 0.0;
+let camera_pitch = Math.PI / 10;
 let player_yaw = 0;
 
 export let camera_sens = 0.007;
@@ -104,29 +105,44 @@ export async function engine_load(webgpu = false) {
   });
 
   document.addEventListener("mousedown", (e) => {
-    e.preventDefault();
     mouse_down[e.button] = true;
   });
 
   document.addEventListener("mouseup", (e) => {
-    e.preventDefault();
     mouse_down[e.button] = false;
   });
 
   document.addEventListener("keydown", (e) => {
-    key_down[e.code] = true;
-    if (e.code == "ShiftLeft") {
+    if (document.activeElement === chat_input) return;
+    let code = e.code;
+    if (e.code == "ArrowUp") {
+      code = "KeyW";
+    } else if (e.code == "ArrowDown") {
+      code = "KeyS";
+    }
+    key_down[code] = true;
+    if (code == "ShiftLeft") {
       shift_lock = !shift_lock;
       if (shift_lock) {
         document.body.requestPointerLock();
       } else {
         document.exitPointerLock();
       }
+    } else if (code == "Slash") {
+      e.preventDefault();
+      chat_input.focus();
     }
   });
 
   document.addEventListener("keyup", (e) => {
-    key_down[e.code] = false;
+    if (document.activeElement === chat_input) return;
+    let code = e.code;
+    if (e.code == "ArrowUp") {
+      code = "KeyW";
+    } else if (e.code == "ArrowDown") {
+      code = "KeyS";
+    }
+    key_down[code] = false;
   });
 
   document.addEventListener("contextmenu", (e) => {
@@ -184,6 +200,8 @@ export function engine_input(dt) {
   if (key_down["KeyS"]) movez += 1;
   if (key_down["KeyA"]) movex -= 1;
   if (key_down["KeyD"]) movex += 1;
+  if (key_down["ArrowLeft"]) camera_yaw += camera_sens * 5;
+  if (key_down["ArrowRight"]) camera_yaw -= camera_sens * 5;
   if (key_down["Space"]) movey += 1;
 
   if (movex != 0 || movez != 0) {
