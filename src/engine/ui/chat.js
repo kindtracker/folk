@@ -1,4 +1,4 @@
-import { canvas, ctx, wrap_text } from "/ui/ui.js";
+import { canvas, ctx, wrap_text } from "/engine/ui/ui.js";
 import { width, height } from "/engine/folk-engine.js";
 import { me } from "/main.js";
 
@@ -80,37 +80,38 @@ export function chat_get_ucolor(username) {
 }
 
 export function chat_draw() {
-  if (chat_toggle) {
-    ctx.fillStyle = "#00000064";
-    ctx.beginPath();
-    ctx.roundRect(10, 55, chat_width, chat_height, [4, 4, 4, 4]);
-    ctx.fill();
-    chat_input.style.display = "block";
+  if (!chat_toggle) {
+    chat_input.style.display = "none";
+    return;
+  }
 
-    ctx.fillStyle = "white";
-    ctx.font = '400 14px "Montserrat", system-ui, -apple-system, sans-serif';
-    let y = 75;
-    for (const msg of chat.messages) {
-      const p = `[${msg.username}] ${msg.text}`;
-      const lines = wrap_text(msg.text, chat_width - 18);
+  ctx.fillStyle = "#00000064";
+  ctx.beginPath();
+  ctx.roundRect(10, 55, chat_width, chat_height, [4, 4, 4, 4]);
+  ctx.fill();
+  chat_input.style.display = "block";
 
-      for (const line of lines) {
-        if (y-chat.scroll >= 50) {
-          const prefix = `[${msg.username}]: `;
-          const color = chat_get_ucolor(msg.username);
-          ctx.fillStyle = color;
-          ctx.fillText(prefix, 18, y - chat.scroll);
+  ctx.fillStyle = "white";
+  ctx.font = '400 14px "Montserrat", system-ui, -apple-system, sans-serif';
+  let y = 75;
+  for (const msg of chat.messages) {
+    const p = `[${msg.username}] ${msg.text}`;
+    const lines = wrap_text(msg.text, chat_width - 18);
 
-          const x = ctx.measureText(prefix).width;
-          ctx.fillStyle = "white";
-          ctx.fillText(line, 18+x, y-chat.scroll);
-        }
-        y += 18;
+    for (const line of lines) {
+      if (y-chat.scroll >= 50) {
+        const prefix = `[${msg.username}]: `;
+        const color = chat_get_ucolor(msg.username);
+        ctx.fillStyle = color;
+        ctx.fillText(prefix, 18, y - chat.scroll);
+
+        const x = ctx.measureText(prefix).width;
+        ctx.fillStyle = "white";
+        ctx.fillText(line, 18+x, y-chat.scroll);
       }
-      y += 4; 
+      y += 18;
     }
-  } else {
-   chat_input.style.display = "none";
+    y += 4; 
   }
 }
 

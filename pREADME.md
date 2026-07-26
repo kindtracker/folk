@@ -1,0 +1,26 @@
+# folk
+
+Folk is a web client, designed to run Vortex on every device
+
+## Roadmap
+- [ ] Connect to official servers
+- [ ] Provide folk.exe
+- [ ] Have community servers
+- [ ] Have custom maps published by community
+
+## Quickstart (Linux)
+### Requirements
+- Linux
+- Node.js
+- NPM
+
+### To run Folk
+```
+$ git clone https://github.com/kindtracker/folk_pub
+$ cd folk_pub
+$ npm run server
+```
+
+## Q&A
+Q: Why is it obfuscated and not open source.
+A: Because it is a client, written in Javascript, C. Javascript is a interpreted language, that means you need have source code not machine code. I don't wanna people make exploits with this client.

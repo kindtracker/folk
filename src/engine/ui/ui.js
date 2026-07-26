@@ -1,4 +1,5 @@
-import { chat_init, chat_draw, chat_toggle, chat_old_toggle, mchat_toggle, mchat_old_toggle } from "/ui/chat.js";
+import { chat_init, chat_draw, chat_toggle, chat_input, chat_old_toggle, mchat_toggle, mchat_old_toggle } from "/engine/ui/chat.js";
+import { f2_init, f2_draw } from "/engine/ui/f2.js";
 import { width, height } from "/engine/folk-engine.js";
 
 export let canvas = null;
@@ -58,11 +59,13 @@ export function ui_load() {
   });
 
   chat_init();
+  f2_init();
 }
 
 export function ui_draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   chat_draw();
+  f2_draw();
 
   ctx.fillStyle = "#00000064";
   ctx.beginPath();

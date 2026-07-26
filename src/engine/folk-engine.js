@@ -3,8 +3,9 @@ import * as THREE from "https://esm.sh/three@0.185.1";
 import * as CANNON from "https://esm.sh/cannon-es";
 import { map_init } from "/engine/map.js";
 import { player_animate, player_init, player_obj_init } from "/engine/player.js";
-import { ui_draw } from "/ui/ui.js";
-import { chat_input } from "/ui/chat.js";
+import { ui_draw, ui_load } from "/engine/ui/ui.js";
+import { f2_get, f2_reset } from "/engine/ui/f2.js";
+import { chat_input } from "/engine/ui/chat.js";
 import { me } from "/main.js";
 
 export let world = null;
@@ -27,6 +28,7 @@ export let key_down = {};
 export let shift_lock = false;
 
 export let f1_toggle = false;
+export let f2_toggle = false;
 export let width;
 export let height;
 let lt = performance.now();
@@ -157,6 +159,8 @@ export async function engine_load(webgpu = false) {
           }
         });
       }
+    } else if (code == "F2") {
+      f2_toggle = !f2_toggle;
     } else if (code == "Slash") {
       e.preventDefault();
       chat_input.focus();
@@ -166,6 +170,10 @@ export async function engine_load(webgpu = false) {
     } else if (code == "Period") {
       camera_yaw = Math.round(camera_yaw / (Math.PI / 4)) * (Math.PI / 4);
       camera_yaw += Math.PI / -4;
+    }
+
+    if (key_down["ControlLeft"] && key_down["F2"]) {
+      f2_reset();
     }
   });
 
@@ -208,6 +216,8 @@ export async function engine_load(webgpu = false) {
     player.nametag.scale.set(10, 2.5, 10);
     scene.add(player.nametag);
   });
+
+  ui_load();
 }
 
 export async function engine_map_load(id) {
@@ -260,6 +270,15 @@ export function engine_input(dt) {
   
   if (shift_lock) {
     player.body.quaternion.setFromEuler(0, camera_yaw, 0);
+  }
+
+  if (key_down["KeyI"]) {
+    camera_distance += 10 * dt;
+    camera_distance = Math.max(0, Math.min(50, camera_distance));
+  } 
+  if (key_down["KeyO"]) {
+    camera_distance += -10 * dt;
+    camera_distance = Math.max(0, Math.min(50, camera_distance));
   }
 
   player.on_ground = false;
@@ -327,11 +346,12 @@ export function smooth_rot(object, dt, target, speed = 5) {
 
 export function engine_loop() {
   requestAnimationFrame(engine_loop);
- 
+
   let info = renderer.info.render;
   let now = performance.now();
   let dt = (now - lt) / 1000;
   lt = now;
+  f2_get(dt);
   if (dt > 0.1) {
     return;
   }
