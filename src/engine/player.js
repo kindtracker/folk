@@ -73,7 +73,7 @@ export function player_init(name) {
   let mesh_index = 0;
   player.model.traverse((child) => {
     if (child.isMesh) {
-      const texture = texture_loader.load("api/clothing/" + mesh_map_texture[mesh_index]);
+      const texture = texture_loader.load("api/clothing/image/" + mesh_map_texture[mesh_index]);
 
       if (mesh_index == 0) {
         texture.repeat.set(2.8, 2.8);

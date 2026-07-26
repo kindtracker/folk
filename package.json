@@ -1,7 +1,7 @@
 {
   "scripts": {
     "build": "node build.js",
-    "run": "node folk.js"
+    "server": "node folk.js"
   },
   "devDependencies": {
     "esbuild": "^0.28.1",
