@@ -1,7 +1,7 @@
 import * as THREE from "https://esm.sh/three@0.185.1";
 import * as CANNON from "https://esm.sh/cannon-es";
 import { glb_load } from "/engine/obj.js";
-import { smooth_move, smooth_rot } from "/engine/folk-engine.js";
+import { engine_move, engine_rot, key_down } from "/engine/folk-engine.js";
 
 const texture_loader = new THREE.TextureLoader();
 
@@ -23,7 +23,7 @@ const head_blend_shader = shader => {
   `#ifdef USE_MAP
   vec4 sampledDiffuseColor = texture2D(map, vec2(1.0 - vMapUv.x, vMapUv.y));
   diffuseColor.rgb = mix(diffuseColor.rgb, sampledDiffuseColor.rgb, sampledDiffuseColor.a);
-  diffuseColor.a = 1.0;
+  diffuseColor.a *= opacity;
   #endif`);
 };
 
@@ -33,7 +33,7 @@ const blend_shader = shader => {
   `#ifdef USE_MAP
   vec4 sampledDiffuseColor = texture2D(map, vMapUv);
   diffuseColor.rgb = mix(diffuseColor.rgb, sampledDiffuseColor.rgb, sampledDiffuseColor.a);
-  diffuseColor.a = 1.0;
+  diffuseColor.a *= opacity;
   #endif`);
 };
 
@@ -44,7 +44,7 @@ export function player_obj_init_on_load(model) {
 }
 
 export function player_obj_init(scene, callback) {
-  glb_load("/api/objects/male.glb", (model) => {
+  glb_load("/api/objects/female.glb", (model) => {
     player_obj_init_on_load(model);
     if (callback) callback();
   });
@@ -56,12 +56,36 @@ export function player_animate(player, dt) {
   let swing = Math.PI;
   if (player.walking) {
     swing += Math.sin(time / 90) * Math.PI/2;
+  } 
+
+  let anim = "idle";
+  if (!player.on_ground) {
+    anim = "fall";
+  } else if (player.walking) {
+    anim = "walk";
+  }
+  if (player.on_ground && key_down["Space"]) {
+    anim = "fall";
   }
 
-  smooth_rot(player.parts["Right_Arm"], dt, new THREE.Vector3(swing - Math.PI / 2, Math.PI, 0));
-  smooth_rot(player.parts["Left_Arm"], dt, new THREE.Vector3(-swing - Math.PI / 2, Math.PI, 0));
-  smooth_rot(player.parts["Right_Leg"], dt, new THREE.Vector3(-swing - Math.PI / 2, Math.PI, 0));
-  smooth_rot(player.parts["Left_Leg"], dt, new THREE.Vector3(swing - Math.PI / 2, Math.PI, 0));
+  if (anim == "walk") {
+    const swing = Math.PI + Math.sin(time / 180) * Math.PI/4;
+    engine_rot(player.parts["Right_Arm"], new THREE.Vector3(swing - Math.PI / 2, Math.PI, 0));
+    engine_rot(player.parts["Left_Arm"], new THREE.Vector3(-swing - Math.PI / 2, Math.PI, 0));
+    engine_rot(player.parts["Right_Leg"], new THREE.Vector3(-swing - Math.PI / 2, Math.PI, 0));
+    engine_rot(player.parts["Left_Leg"], new THREE.Vector3(swing - Math.PI / 2, Math.PI, 0));
+  } else if (anim == "fall") {
+    engine_rot(player.parts["Right_Arm"], new THREE.Vector3(-Math.PI + Math.PI/1.75, Math.PI, 0));
+    engine_rot(player.parts["Left_Arm"], new THREE.Vector3(-Math.PI + Math.PI/1.75, Math.PI, 0));
+    engine_rot(player.parts["Right_Leg"], new THREE.Vector3(-Math.PI - Math.PI / 2, Math.PI, 0));
+    engine_rot(player.parts["Left_Leg"], new THREE.Vector3(Math.PI - Math.PI / 2, Math.PI, 0));
+  } else if (anim == "idle") {
+    const swing = Math.PI + Math.sin(time * 0.01) * 0.05;
+    engine_rot(player.parts["Right_Arm"], new THREE.Vector3(swing - Math.PI / 2, Math.PI, 0));
+    engine_rot(player.parts["Left_Arm"], new THREE.Vector3(-swing - Math.PI / 2, Math.PI, 0));
+    engine_rot(player.parts["Right_Leg"], new THREE.Vector3(-Math.PI - Math.PI / 2, Math.PI, 0));
+    engine_rot(player.parts["Left_Leg"], new THREE.Vector3(Math.PI - Math.PI / 2, Math.PI, 0));
+  }
 }
 
 export function player_init(name) {

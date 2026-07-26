@@ -31,6 +31,7 @@ export let f1_toggle = false;
 export let f2_toggle = false;
 export let width;
 export let height;
+let player_mat_needupdate = false;
 let lt = performance.now();
 
 export let stud = null;
@@ -194,8 +195,9 @@ export async function engine_load(webgpu = false) {
 
   document.addEventListener("wheel", (e) => {
     e.preventDefault();
+    player_mat_needupdate = true;
     camera_distance += e.deltaY * 0.01;
-    camera_distance = Math.max(0, Math.min(50, camera_distance));
+    camera_distance = Math.max(0.001, Math.min(50, camera_distance));
   }, { passive: false });
 
   window.addEventListener("resize", () => {
@@ -273,12 +275,14 @@ export function engine_input(dt) {
   }
 
   if (key_down["KeyI"]) {
+    player_mat_needupdate = true;
     camera_distance += 10 * dt;
-    camera_distance = Math.max(0, Math.min(50, camera_distance));
+    camera_distance = Math.max(0.001, Math.min(50, camera_distance));
   } 
   if (key_down["KeyO"]) {
+    player_mat_needupdate = true;
     camera_distance += -10 * dt;
-    camera_distance = Math.max(0, Math.min(50, camera_distance));
+    camera_distance = Math.max(0.001, Math.min(50, camera_distance));
   }
 
   player.on_ground = false;
@@ -334,14 +338,28 @@ export function engine_input(dt) {
   }*/
 }
 
-export function smooth_move(object, dt, target, speed = 5) {
-  object.position.lerp(target, speed * dt);
+export function angle_diff(target, current, clockwise = null) {
+  let diff = target - current;
+
+  while (diff > Math.PI) diff -= Math.PI * 2;
+  while (diff < -Math.PI) diff += Math.PI * 2;
+
+  if (clockwise === true && diff > 0) {
+    diff -= Math.PI * 2;
+    } else if (clockwise === false && diff < 0) {
+      diff += Math.PI * 2;
+  }
+
+  return diff;
 }
 
-export function smooth_rot(object, dt, target, speed = 5) {
-  object.rotation.x += (target.x - object.rotation.x) * speed * dt;
-  object.rotation.y += (target.y - object.rotation.y) * speed * dt;
-  object.rotation.z += (target.z - object.rotation.z) * speed * dt;
+export function engine_move(object, target) {
+  object.position.copy(target);
+}
+
+export function engine_rot(object, target) {
+  const quat = new THREE.Quaternion().setFromEuler(new THREE.Euler(target.x, target.y, target.z));
+  object.quaternion.copy(quat);
 }
 
 export function engine_loop() {
@@ -383,15 +401,25 @@ export function engine_loop() {
     camera.position.y = head_world_pos.y + camera_distance * Math.sin(camera_pitch);
     camera.position.z = head_world_pos.z + camera_distance * Math.cos(camera_pitch) * cos_yaw;
     if (shift_lock) {
-      camera.position.x += cos_yaw * 1;
-      camera.position.z += -sin_yaw * 1;
-      head_world_pos.x += cos_yaw * 1;
-      head_world_pos.z += -sin_yaw * 1;
+      camera.position.x += cos_yaw * Math.min(1, camera_distance/3);
+      camera.position.z += -sin_yaw * Math.min(1, camera_distance/3);
+      head_world_pos.x += cos_yaw * Math.min(1, camera_distance/3);
+      head_world_pos.z += -sin_yaw * Math.min(1, camera_distance/3);
+    }
+
+    if (player_mat_needupdate) {
+      player.model.traverse((child) => {
+        if (child.isMesh) {
+          child.material.transparent = true;
+          child.material.opacity = Math.max(0, camera_distance/3);
+          child.material.needsUpdate = true;
+        }
+      });
     }
 
     camera.lookAt(head_world_pos);
   }
-
+  
   renderer.render(scene, camera);
   ui_draw();
 }
