@@ -1,6 +1,7 @@
 # folk
 
-Folk is a web client, designed to run Vortex on every device
+Folk is a web client, designed to run Vortex on every device  
+This not connects to official servers yet.
 
 ## Roadmap
 - [ ] Have community servers
@@ -17,7 +18,7 @@ Folk is a web client, designed to run Vortex on every device
 
 ### To run Folk
 ```
-$ git clone https://github.com/kindtracker/folk_pub
+$ git clone https://github.com/kindtracker/folk
 $ cd folk_pub
 $ node folk.js
 ```
