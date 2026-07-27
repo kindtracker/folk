@@ -1,0 +1,11 @@
+{
+  "id": 3,
+  "name": "Snowy Peak",
+  "description": "it's really chilly up here",
+  "creator_id": 2,
+  "creator_name": "kostas",
+  "thumbnail_version": "main",
+  "instances": [],
+  "player_count": 1,
+  "spawn_points": [[0, 0, 0]]
+}

@@ -1,0 +1,11 @@
+{
+  "id": 1,
+  "name": "Demo",
+  "description": "Test physics and features while developing Vortex.",
+  "creator_id": 1,
+  "creator_name": "TheHaloDeveloper",
+  "thumbnail_version": "main",
+  "instances": [],
+  "player_count": 2,
+  "spawn_points": [[0, 0, 0]]
+}

@@ -1,0 +1,11 @@
+{
+  "id": 8,
+  "name": "Vortexia",
+  "description": "A small little town to hangout with others! ",
+  "creator_id": 2705,
+  "creator_name": "yea",
+  "thumbnail_version": "main",
+  "instances": [],
+  "player_count": 50,
+  "spawn_points": [[0, 324.5, 0]]
+}

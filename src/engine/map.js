@@ -4,7 +4,7 @@ import * as CANNON from "https://esm.sh/cannon-es";
 
 import { world, scene, stud, stud_scale, group_map, group_player, csm } from "/engine/folk-engine.js";
 
-export async function map_init(deg, id) {
+export async function map_init(deg, id, spawn_points = []) {
   const map_res = await fetch(`/api/maps/${id}`);
   const map = await map_res.json();
   
@@ -13,7 +13,6 @@ export async function map_init(deg, id) {
     mass: 0
   });
 
-  let spawn_pos = null;
   for (let i = 0; i < map.length; i++) {
     const partj = map[i];
     if (partj.T == "ShirtPad") {
@@ -23,7 +22,8 @@ export async function map_init(deg, id) {
     const p = partj.P;
     const r = [deg(partj.R[0]), deg(partj.R[1]), deg(partj.R[2])];
     const s = partj.S;
-    if (!groups[partj.C]) groups[partj.C] = {sides: [], studs: []};
+    const tr_hex = partj.Tr.toString(16).padStart(2, "0");
+    if (!groups[partj.C+tr_hex]) groups[partj.C+tr_hex] = {sides: [], studs: []};
 
     const geom = new THREE.BoxGeometry(s[0], s[1], s[2]);
     geom.rotateX(r[0]);
@@ -62,9 +62,9 @@ export async function map_init(deg, id) {
     bottom.rotateZ(r[2]);
     bottom.translate(p[0], p[1], p[2]);
 
-    groups[partj.C].studs.push(top);
-    groups[partj.C].studs.push(bottom);
-    groups[partj.C].sides.push(geom);
+    groups[partj.C+tr_hex].studs.push(top);
+    groups[partj.C+tr_hex].studs.push(bottom);
+    groups[partj.C+tr_hex].sides.push(geom);
 
     const cpart = new CANNON.Body({
       mass: 0,
@@ -85,8 +85,8 @@ export async function map_init(deg, id) {
       new CANNON.Quaternion().setFromEuler(r[0], r[1],r[2])
     );
 
-    if (partj.T = "SpawnLocation") {
-      spawn_pos = new THREE.Vector3(p[0], p[1], p[2]);
+    if (partj.T == "SpawnLocation") {
+      spawn_points.push([p[0], p[1], p[2]]);
     }
   }
   map_body.collisionFilterGroup = group_map;
@@ -97,17 +97,24 @@ export async function map_init(deg, id) {
     const merged_side = mergeGeometries(groups[color].sides);
     const merged_stud = mergeGeometries(groups[color].studs);
 
+    let tr = Number("0x" + color.slice(6));
     const side_mat = new THREE.MeshLambertMaterial({
-      color: Number(`0x${color}`),
-      flatShading: true
+      color: Number(`0x${color.slice(0, 6)}`),
+      flatShading: true,
+      transparent: tr == 1,
+      opacity: tr - 1
     });
 
     const stud_mat = new THREE.MeshLambertMaterial({
       map: stud,
       transparent: true,
-      color: Number(`0x${color}`),
+      color: Number(`0x${color.slice(0, 6)}`),
       flatShading: true
     });
+    if (tr > 0) {
+      stud_mat.opacity = tr - 1
+    }
+    
     csm.setupMaterial(side_mat);
     csm.setupMaterial(stud_mat);
     const mesh_side = new THREE.Mesh(merged_side, side_mat);
@@ -120,5 +127,5 @@ export async function map_init(deg, id) {
     scene.add(mesh_stud);
   }
 
-  return spawn_pos;
+  return spawn_points[Math.floor(Math.random() * spawn_points.length)];
 }

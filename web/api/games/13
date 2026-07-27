@@ -1,0 +1,11 @@
+{
+  "id": 13,
+  "name": "Classic House",
+  "description": "home sweet home",
+  "creator_id": 2,
+  "creator_name": "kostas",
+  "thumbnail_version": "main",
+  "instances": [],
+  "player_count": 0,
+  "spawn_points": [[121, 10.1, 13]]
+}

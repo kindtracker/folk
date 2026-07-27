@@ -1,0 +1,11 @@
+{
+  "id": "Baseplate",
+  "name": "Baseplate",
+  "description": "Just your average baseplate.",
+  "creator_id": 2162,
+  "creator_name": "exelerantt",
+  "thumbnail_version": "main",
+  "instances": [],
+  "player_count": 0,
+  "spawn_points": [[0, 0, 0]]
+}

@@ -260,10 +260,11 @@ export async function engine_map_load(id) {
     }
   });
   console.log("[folk] loading: map (id: " + id + ")");
-  let spawn_pos = await map_init(deg, id);
-  if (spawn_pos) {
-    player.body.position.set(spawn_pos.x, spawn_pos.y, spawn_pos.z);
-  }
+  const map_res = await fetch(`/api/games/${id}`);
+  const map = await map_res.json();
+
+  let spawn_pos = await map_init(deg, id, map.spawn_points);
+  player.body.position.set(spawn_pos[0], spawn_pos[1], spawn_pos[2]);
 }
 
 export function engine_input(dt) {

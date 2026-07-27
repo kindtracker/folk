@@ -1,0 +1,11 @@
+{
+  "id": 10,
+  "name": "Anixus Pond",
+  "description": "Located in a National Vortexian Park, a tranquil pond lies in a deep crater. You feel a sense of familiarity yet forboding anxiety entering this land. ",
+  "creator_id": 2878,
+  "creator_name": "Carmine",
+  "thumbnail_version": "main",
+  "instances": [],
+  "player_count": 2,
+  "spawn_points": [[-1504, 294, 433]]
+}

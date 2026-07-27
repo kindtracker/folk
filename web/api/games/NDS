@@ -1,0 +1,11 @@
+{
+  "id": "NDS",
+  "name": "NDS",
+  "description": "Just your average natural disaster survival.",
+  "creator_id": 1961,
+  "creator_name": "inuk",
+  "thumbnail_version": "main",
+  "instances": [],
+  "player_count": 0,
+  "spawn_points": [[-1602.02, 177.215, 367.537]]
+}

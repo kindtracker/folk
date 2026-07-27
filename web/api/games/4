@@ -1,0 +1,11 @@
+{
+  "id": 4,
+  "name": "The Crossbridges",
+  "description": "A Large island located in the Vortexic Ocean, divided into 4 slices and connected by colorful bridges. Which path will you choose?",
+  "creator_id": 3135,
+  "creator_name": "Eduardo",
+  "thumbnail_version": "main",
+  "instances": [],
+  "player_count": 0,
+  "spawn_points": [[0, 451.1, 0]]
+}
