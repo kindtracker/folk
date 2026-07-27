@@ -369,24 +369,24 @@ function chat_draw() {
   chat_input.style.display = "block";
   ctx.fillStyle = "white";
   ctx.font = '400 14px "Montserrat", system-ui, -apple-system, sans-serif';
-  let y = 55;
+  let y = 57.5;
   for (const msg of chat.messages) {
     const p = `[${msg.username}]: ${msg.text}`;
     const prefix = `[${msg.username}]: `;
     const lines = wrap_text(msg.text, chat_width - ctx.measureText(prefix).width);
-    if (y - chat.scroll >= 60) {
+    if (y - chat.scroll >= 55) {
       const prefix2 = `[${msg.username}]: `;
       const color = chat_get_ucolor(msg.username);
       ctx.fillStyle = color;
       ctx.fillText(prefix2, 0, y - chat.scroll);
     }
     for (const line of lines) {
-      if (y - chat.scroll >= 60) {
+      if (y - chat.scroll >= 55) {
         const x = ctx.measureText(prefix).width;
         ctx.fillStyle = "white";
         ctx.fillText(line, x, y - chat.scroll);
       }
-      y += 18;
+      y += 14;
     }
     y += 4;
   }
@@ -395,7 +395,7 @@ function chat_get_height() {
   let height2 = 0;
   for (const msg of chat.messages) {
     const lines = wrap_text(msg.text, chat_width - 18);
-    height2 += lines.length * 18 + 4;
+    height2 += lines.length * 14 + 4;
   }
   return height2;
 }
