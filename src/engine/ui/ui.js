@@ -1,10 +1,9 @@
-import { chat_init, chat_draw, chat_toggle, chat_input, chat_old_toggle, mchat_toggle, mchat_old_toggle } from "/engine/ui/chat.js";
+import { chat_init, chat_draw, chat_toggle, chat_input, mchat_toggle } from "/engine/ui/chat.js";
 import { f2_init, f2_draw } from "/engine/ui/f2.js";
 import { width, height } from "/engine/folk-engine.js";
 
 export let canvas = null;
 export let ctx = null;
-export let menu_toggle = false;
 
 export let logo = null;
 export let icon = null;
@@ -41,16 +40,7 @@ export function ui_load() {
   canvas.addEventListener("click", (e) => {
     const x = e.clientX;
     const y = e.clientY;
-    if (x >= 8 && x <= 48 && y >= 8 && y <= 48) {
-      menu_toggle = !menu_toggle;
-      if (menu_toggle == false) {
-        mchat_toggle(chat_old_toggle);
-      } else {
-        mchat_old_toggle(chat_toggle);
-        mchat_toggle(false);
-      }
-    }
-    if (x >= 8+45 && x <= 48+45 && y >= 8 && y <= 48) {
+    if (x >= 120 && x <= 120+40 && y >= 0 && y <= 40) {
       mchat_toggle(!chat_toggle);  
       if (chat_toggle) {
         chat_input.focus();
@@ -67,27 +57,32 @@ export function ui_draw() {
   chat_draw();
   f2_draw();
 
-  ctx.fillStyle = "#00000064";
+  ctx.fillStyle = "#40404080";
   ctx.beginPath();
-  ctx.arc(28, 28, 20, 0, 2 * Math.PI);
+  ctx.rect(0, 0, width, 40);
   ctx.fill();
 
-  ctx.beginPath();
-  ctx.arc(28 + 45, 28, 20, 0, 2 * Math.PI);
-  ctx.fill();
+  ctx.drawImage(logo, 0, 0, 120, 40);
 
-  ctx.drawImage(icon, 15, 16, 26, 26);
+  ctx.strokeStyle = "#ffffff";
+  ctx.lineWidth = 3;
+
+  ctx.beginPath();
+  ctx.moveTo(120 + 5, 10);
+  ctx.lineTo(120 + 40 - 5, 10);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(120 + 5, 20);
+  ctx.lineTo(120 + 40 - 5, 20);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(120 + 5, 30);
+  ctx.lineTo(120 + 40 - 5, 30);
+  ctx.stroke();
 
   chat_draw();
-
-  if (menu_toggle) {
-    ctx.fillStyle = "#00000080";
-    ctx.beginPath();
-    ctx.roundRect(width/5, height/10, width/5*3, height/6*5, 50, [4, 4, 4, 4]);
-    ctx.fill();
-
-    ctx.drawImage(logo, width/5+width/6.5, height/9, width/7*2, height/6);
-  }
 }
 
 export function wrap_text(text, maxWidth) {

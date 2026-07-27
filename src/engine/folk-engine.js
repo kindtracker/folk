@@ -89,7 +89,7 @@ export async function engine_load(webgpu = false) {
   console.log("[folk] loading: csm");
   csm = new CSM({
     maxFar: 500,
-    cascades: 4,
+    cascades: 3,
     mode: "practical",
     parent: scene,
     shadowMapSize: 2048,
