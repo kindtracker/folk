@@ -48,9 +48,10 @@ function deg(degrees) {
 }
 
 export async function engine_load(webgpu = false) {
-  console.log("[folk] loading: engine");
   width = window.innerWidth;
   height = window.innerHeight;
+  ui_load();
+  console.log("[folk] loading: engine");
 
   console.log("[folk] loading: world");
   world = new CANNON.World({ gravity: new CANNON.Vec3(0, -196.2, 0) });
@@ -90,38 +91,27 @@ export async function engine_load(webgpu = false) {
   csm = new CSM({
     maxFar: 500,
     cascades: 3,
-    mode: "practical",
+    mode: "uniform",
     parent: scene,
-    shadowMapSize: 2048,
+    shadowMapSize: 1024,
     lightDirection: new THREE.Vector3(-1, -1, -1),
     camera: camera
   });
+  for (const light of csm.lights) {
+    light.intensity = 3;
+  }
 
   console.log("[folk] loading: ambient light");
   const ambient_light = new THREE.AmbientLight(0xffffff, 1.5);
   scene.add(ambient_light);
-
-  /*console.log("[folk] loading: light");
-  const size = 64;
-  light = new THREE.DirectionalLight(0xffffff, 3);
-  light.position.set(32, 64, 32);
-  light.target.position.set(0, 0, 0);
-  light.castShadow = true;
-  light.shadow.camera.left = -size;
-  light.shadow.camera.right = size;
-  light.shadow.camera.top = size;
-  light.shadow.camera.bottom = -size;
-  light.shadow.camera.near = 1;
-  light.shadow.camera.far = 200;
-
-  scene.add(light);
-  scene.add(light.target);*/
 
   console.log("[folk] loading: textures (engine)");
   console.log("[folk] loading: stud (texture)");
   stud = new THREE.TextureLoader().load("/api/images/stud.png", (texture) => {
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
+    texture.magFilter = THREE.LinearFilter;
+    texture.minFilter = THREE.LinearMipmapLinearFilter;
   });
 
   console.log("[folk] loading: event listeners (engine)");
@@ -224,15 +214,14 @@ export async function engine_load(webgpu = false) {
   });
 
   console.log("[folk] loading: player");
-  player_obj_init(scene, () => {
-    player = player_init(me.username);
-    scene.add(player.model);
-    world.addBody(player.body);
-    player.body.position.set(0, 500, 0);
-    player.nametag.position.set(0, 4, 0);
-    player.nametag.scale.set(10, 2.5, 10);
-    scene.add(player.nametag);
-  });
+  await player_obj_init(scene);
+  player = player_init(me.username, me.avatar);
+  scene.add(player.model);
+  world.addBody(player.body);
+  player.body.position.set(0, 500, 0);
+  player.nametag.position.set(0, 4, 0);
+  player.nametag.scale.set(10, 2.5, 10);
+  scene.add(player.nametag);
 
   ui_load();
 }
@@ -390,6 +379,8 @@ export function engine_loop() {
   }
   engine_input(dt);
   world.step(1/60, dt, 3);
+
+  console.log('test')
 
   if (player) {
     player.model.position.copy(player.body.position);

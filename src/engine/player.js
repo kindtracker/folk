@@ -1,3 +1,4 @@
+import * as SkeletonUtils from "https://esm.sh/three@0.185.1/examples/jsm/utils/SkeletonUtils.js";
 import * as THREE from "https://esm.sh/three@0.185.1";
 import * as CANNON from "https://esm.sh/cannon-es";
 
@@ -6,16 +7,17 @@ import { engine_move, engine_rot, key_down, csm } from "/engine/folk-engine.js";
 
 const texture_loader = new THREE.TextureLoader();
 
-let player_model = null;
+let player_model_male = null;
+let player_model_female = null;
 
-const mesh_map_texture = {
-  0: 42, // Head
-  1: 17, // Left arm
-  2: 27, // Left leg
-  3: 17, // Right arm
-  4: 27, // Right leg
-  5: 17  // Torso  
-};
+const mesh_map = {
+  0: "face",
+  1: "shirt",
+  2: "pants",
+  3: "shirt",
+  4: "pants",
+  5: "shirt"
+}
 
 const head_blend_shader = shader => {
   shader.fragmentShader = shader.fragmentShader.replace(
@@ -37,17 +39,31 @@ const blend_shader = shader => {
   #endif`);
 };
 
-export function player_obj_init_on_load(model) {
+export function player_obj_init_on_load(model, male) {
   model.position.set(0, 0, 0);
   model.scale.set(1, 1, 1);
-  player_model = model;
+  if (male) {
+    player_model_male = model;
+  } else {
+    player_model_female = model;
+  }
 }
 
 export function player_obj_init(scene, callback) {
-  glb_load("/api/objects/male.glb", (model) => {
-    player_obj_init_on_load(model);
-    if (callback) callback();
-  });
+  return Promise.all([
+    new Promise(resolve => {
+      glb_load("/api/objects/male.glb", model => {
+        player_obj_init_on_load(model, true);
+        resolve();
+      });
+    }),
+    new Promise(resolve => {
+      glb_load("/api/objects/female.glb", model => {
+        player_obj_init_on_load(model, false);
+        resolve();
+      });
+    })
+  ]);
 }
 
 export function player_animate(player, dt) {
@@ -86,18 +102,14 @@ export function player_animate(player, dt) {
     engine_rot(player.parts["Right_Leg"], new THREE.Vector3(-Math.PI - Math.PI / 2, Math.PI, 0));
     engine_rot(player.parts["Left_Leg"], new THREE.Vector3(Math.PI - Math.PI / 2, Math.PI, 0));
   }
+  console.log("test")
 }
 
-export function player_init(name) {
-  if (!player_model) {
-    console.error("player model not loaded yet");
-    return null;
-  }
-  const player = { name, nametag: null, clothing: [0, 0, 0], colors: [0, 0, 0, 0, 0, 0], body: null, model: player_model, id: 0, walking: true, on_ground: false, dying: 0, parts: [] };
+export function player_clothing_load(player, clothing) {
   let mesh_index = 0;
   player.model.traverse((child) => {
     if (child.isMesh) {
-      const texture = texture_loader.load("api/clothing/image/" + mesh_map_texture[mesh_index]);
+      const texture = texture_loader.load("api/clothing/image/" + clothing[mesh_map[mesh_index]]);
 
       if (mesh_index == 0) {
         texture.repeat.set(2.8, 2.8);
@@ -125,6 +137,20 @@ export function player_init(name) {
       player.parts[child.name] = child;
     }
   });
+}
+
+export function player_init(name, avatar) {
+  console.log(`[folk] loading: player (name: ${name})`)
+  if (!player_model_male || !player_model_female) {
+    console.error("[folk] player model not loaded yet");
+    console.error(`[folk] player_model_male: ${player_model_male ? "loaded" : "not loaded"}`);
+    console.error(`[folk] player_model_female: ${player_model_female ? "loaded" : "not loaded"}`);
+    return null;
+  }
+  const player = { name, avatar, nametag: null, clothing: [0, 0, 0], colors: [0, 0, 0, 0, 0, 0], body: null, model: null, id: 0, walking: true, on_ground: false, dying: 0, parts: [] };
+  player.model = SkeletonUtils.clone(avatar.gender == "male" ? player_model_male : player_model_female);
+  console.log(avatar)
+  player_clothing_load(player, avatar);
   
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");

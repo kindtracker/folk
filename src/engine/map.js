@@ -92,14 +92,16 @@ export async function map_init(deg, id) {
     const merged_side = mergeGeometries(groups[color].sides);
     const merged_stud = mergeGeometries(groups[color].studs);
 
-    const side_mat = new THREE.MeshPhongMaterial({
-      color: Number(`0x${color}`)
+    const side_mat = new THREE.MeshLambertMaterial({
+      color: Number(`0x${color}`),
+      flatShading: true
     });
 
-    const stud_mat = new THREE.MeshPhongMaterial({
+    const stud_mat = new THREE.MeshLambertMaterial({
       map: stud,
       transparent: true,
-      color: Number(`0x${color}`)
+      color: Number(`0x${color}`),
+      flatShading: true
     });
     csm.setupMaterial(side_mat);
     csm.setupMaterial(stud_mat);

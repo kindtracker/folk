@@ -93,7 +93,7 @@ export function chat_draw() {
 
   ctx.fillStyle = "white";
   ctx.font = '400 14px "Montserrat", system-ui, -apple-system, sans-serif';
-  let y = 60;
+  let y = 55;
   for (const msg of chat.messages) {
     const p = `[${msg.username}]: ${msg.text}`;
     const prefix = `[${msg.username}]: `;

@@ -19,7 +19,7 @@ $ git clone https://github.com/kindtracker/folk_pub
 $ cd folk_pub
 $ node folk.js
 ```
-Open http://127.0.0.1/?game_id=1&webgl=true
+Open http://127.0.0.1/?game_id=1&webgpu=true
 
 ## Q&A
 Q: Why is it obfuscated and not open source.
