@@ -1,4 +1,5 @@
 import { chat_init, chat_draw, chat_toggle, chat_input, mchat_toggle } from "/engine/ui/chat.js";
+import { lb_init, lb_draw } from "/engine/ui/leaderboard.js";
 import { f2_init, f2_draw } from "/engine/ui/f2.js";
 import { width, height } from "/engine/folk-engine.js";
 
@@ -49,12 +50,14 @@ export function ui_load() {
   });
 
   chat_init();
+  lb_init();
   f2_init();
 }
 
 export function ui_draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   chat_draw();
+  lb_draw();
   f2_draw();
 
   ctx.fillStyle = "#40404080";

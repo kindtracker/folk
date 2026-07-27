@@ -102,7 +102,6 @@ export function player_animate(player, dt) {
     engine_rot(player.parts["Right_Leg"], new THREE.Vector3(-Math.PI - Math.PI / 2, Math.PI, 0));
     engine_rot(player.parts["Left_Leg"], new THREE.Vector3(Math.PI - Math.PI / 2, Math.PI, 0));
   }
-  console.log("test")
 }
 
 export function player_clothing_load(player, clothing) {
@@ -149,7 +148,6 @@ export function player_init(name, avatar) {
   }
   const player = { name, avatar, nametag: null, clothing: [0, 0, 0], colors: [0, 0, 0, 0, 0, 0], body: null, model: null, id: 0, walking: true, on_ground: false, dying: 0, parts: [] };
   player.model = SkeletonUtils.clone(avatar.gender == "male" ? player_model_male : player_model_female);
-  console.log(avatar)
   player_clothing_load(player, avatar);
   
   const canvas = document.createElement("canvas");

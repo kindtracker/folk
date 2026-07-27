@@ -211,7 +211,6 @@ function player_animate(player2, dt) {
     engine_rot(player2.parts["Right_Leg"], new THREE3.Vector3(-Math.PI - Math.PI / 2, Math.PI, 0));
     engine_rot(player2.parts["Left_Leg"], new THREE3.Vector3(Math.PI - Math.PI / 2, Math.PI, 0));
   }
-  console.log("test");
 }
 function player_clothing_load(player2, clothing) {
   let mesh_index = 0;
@@ -253,7 +252,6 @@ function player_init(name2, avatar) {
   }
   const player2 = { name: name2, avatar, nametag: null, clothing: [0, 0, 0], colors: [0, 0, 0, 0, 0, 0], body: null, model: null, id: 0, walking: true, on_ground: false, dying: 0, parts: [] };
   player2.model = SkeletonUtils.clone(avatar.gender == "male" ? player_model_male : player_model_female);
-  console.log(avatar);
   player_clothing_load(player2, avatar);
   const canvas2 = document.createElement("canvas");
   const ctx2 = canvas2.getContext("2d");
@@ -403,6 +401,34 @@ function mchat_toggle(value) {
   chat_toggle = value;
 }
 
+// src/engine/ui/leaderboard.js
+var lb_width = 80 * 2;
+var lb_height = 60 * 6;
+function lb_init() {
+  console.log("[folk] loading: lb");
+}
+function lb_draw() {
+  ctx.fillStyle = "#80808080";
+  ctx.beginPath();
+  ctx.rect(width - lb_width - 10, 50, lb_width, lb_height);
+  ctx.fill();
+  const all_players = [player, ...players];
+  all_players.sort((a, b) => a.name.localeCompare(b.name));
+  ctx.font = '500 24px "Montserrat", system-ui, -apple-system, sans-serif';
+  let y = 65;
+  ctx.fillText("Players", width - lb_width + ctx.measureText("Players").width / 2 - 10, y + 5);
+  y += 34;
+  for (const _player of all_players) {
+    if (_player == player) {
+      ctx.fillStyle = "#2e2eff";
+    } else {
+      ctx.fillStyle = "white";
+    }
+    ctx.fillText(_player.name, width - lb_width - 10, y);
+    y += 24;
+  }
+}
+
 // src/engine/ui/f2.js
 var fps_graph = [];
 function f2_init() {
@@ -474,11 +500,13 @@ function ui_load() {
     }
   });
   chat_init();
+  lb_init();
   f2_init();
 }
 function ui_draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   chat_draw();
+  lb_draw();
   f2_draw();
   ctx.fillStyle = "#40404080";
   ctx.beginPath();
@@ -550,6 +578,7 @@ var stud = null;
 var stud_scale = 4;
 var group_player = 1;
 var group_map = 2;
+var players = [];
 function deg(degrees) {
   return degrees * (Math.PI / 180);
 }
@@ -805,7 +834,6 @@ function engine_loop() {
   }
   engine_input(dt);
   world.step(1 / 60, dt, 3);
-  console.log("test");
   if (player) {
     player.model.position.copy(player.body.position);
     player.model.quaternion.copy(player.body.quaternion);

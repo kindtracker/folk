@@ -43,6 +43,8 @@ export let stud_scale = 4;
 export const group_player = 1;
 export const group_map = 2;
 
+export let players = [];
+
 function deg(degrees) {
   return degrees * (Math.PI / 180);
 }
@@ -379,8 +381,6 @@ export function engine_loop() {
   }
   engine_input(dt);
   world.step(1/60, dt, 3);
-
-  console.log('test')
 
   if (player) {
     player.model.position.copy(player.body.position);
