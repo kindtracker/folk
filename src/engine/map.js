@@ -13,6 +13,7 @@ export async function map_init(deg, id) {
     mass: 0
   });
 
+  let spawn_pos = null;
   for (let i = 0; i < map.length; i++) {
     const partj = map[i];
     if (partj.T == "ShirtPad") {
@@ -83,6 +84,10 @@ export async function map_init(deg, id) {
       new CANNON.Vec3(p[0], p[1], p[2]),
       new CANNON.Quaternion().setFromEuler(r[0], r[1],r[2])
     );
+
+    if (partj.T = "SpawnLocation") {
+      spawn_pos = new THREE.Vector3(p[0], p[1], p[2]);
+    }
   }
   map_body.collisionFilterGroup = group_map;
   map_body.collisionFilterMask = group_player;
@@ -114,4 +119,6 @@ export async function map_init(deg, id) {
     scene.add(mesh_side);
     scene.add(mesh_stud);
   }
+
+  return spawn_pos;
 }

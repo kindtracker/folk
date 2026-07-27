@@ -18,9 +18,10 @@ export function lb_draw() {
   const all_players = [player, ...players];
   all_players.sort((a, b) => a.name.localeCompare(b.name));
 
+  ctx.fillStyle = "white";
   ctx.font = '500 24px "Montserrat", system-ui, -apple-system, sans-serif';
   let y = 65;
-  ctx.fillText("Players", width - lb_width + ctx.measureText("Players").width/2-10, y+5)
+  ctx.fillText("Players", width - lb_width + ctx.measureText("Players").width/2-15, y+5)
   y += 34;
   for (const _player of all_players) {
     if (_player == player) {

@@ -57,21 +57,21 @@ const oerror = console.error;
 console.log = (...args) => {
   const message = args.map(String).join(" ");
   engine_logs.push({type: "log", message});
-  olog(message);
+  olog(...args);
   ui_logs_draw();
 };
 
 console.warn = (...args) => {
   const message = args.map(String).join(" ");
   engine_logs.push({type: "warn", message});
-  owarn(message);
+  owarn(...args);
   ui_logs_draw();
 };
 
 console.error = (...args) => {
   const message = args.map(String).join(" ");
   engine_logs.push({type: "error", message});
-  oerror(message);
+  oerror(...args);
   ui_logs_draw();
 };
 
@@ -260,7 +260,10 @@ export async function engine_map_load(id) {
     }
   });
   console.log("[folk] loading: map (id: " + id + ")");
-  await map_init(deg, id);
+  let spawn_pos = await map_init(deg, id);
+  if (spawn_pos) {
+    player.body.position.set(spawn_pos.x, spawn_pos.y, spawn_pos.z);
+  }
 }
 
 export function engine_input(dt) {

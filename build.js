@@ -3,7 +3,7 @@ import { writeFile } from "node:fs/promises";
 import { build } from "esbuild";
 import path from "node:path";
 
-const obfc = true;
+const obfc = false;
 
 const result = await build({
   entryPoints: ["src/main.js"],
