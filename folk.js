@@ -44,6 +44,6 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(80, () => {
+server.listen(6969, () => {
   console.log("[folk] web server listening: http://127.0.0.1:6969");
 });
