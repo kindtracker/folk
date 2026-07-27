@@ -1,6 +1,8 @@
+import { CSM } from "https://esm.sh/three@0.185.1/examples/jsm/csm/CSM.js";
 import { WebGPURenderer } from "https://esm.sh/three@0.185.1/webgpu.js";
 import * as THREE from "https://esm.sh/three@0.185.1";
 import * as CANNON from "https://esm.sh/cannon-es";
+
 import { map_init } from "/engine/map.js";
 import { player_animate, player_init, player_obj_init } from "/engine/player.js";
 import { ui_draw, ui_load } from "/engine/ui/ui.js";
@@ -12,6 +14,7 @@ export let world = null;
 export let scene = null;
 export let camera = null;
 export let renderer = null;
+export let csm = null;
 export let game_canvas = null;
 let light = null;
 
@@ -83,24 +86,36 @@ export async function engine_load(webgpu = false) {
   renderer.shadowMap.type = THREE.PCFShadowMap;
   document.body.appendChild(renderer.domElement);
  
+  console.log("[folk] loading: csm");
+  csm = new CSM({
+    maxFar: 500,
+    cascades: 4,
+    mode: "practical",
+    parent: scene,
+    shadowMapSize: 2048,
+    lightDirection: new THREE.Vector3(-1, -1, -1),
+    camera: camera
+  });
+
   console.log("[folk] loading: ambient light");
-  const ambient_light = new THREE.AmbientLight(0xffffff, 0.85);
+  const ambient_light = new THREE.AmbientLight(0xffffff, 1.5);
   scene.add(ambient_light);
 
-  console.log("[folk] loading: light");
-  light = new THREE.DirectionalLight(0xffffff, 5);
-  light.position.set(0, 0, 0);
+  /*console.log("[folk] loading: light");
+  const size = 64;
+  light = new THREE.DirectionalLight(0xffffff, 3);
+  light.position.set(32, 64, 32);
+  light.target.position.set(0, 0, 0);
   light.castShadow = true;
-  light.shadow.mapSize.set(4096, 4096);
-  light.shadow.camera.left = -1280;
-  light.shadow.camera.right = 1280;
-  light.shadow.camera.top = 1280;
-  light.shadow.camera.bottom = -1280;
+  light.shadow.camera.left = -size;
+  light.shadow.camera.right = size;
+  light.shadow.camera.top = size;
+  light.shadow.camera.bottom = -size;
   light.shadow.camera.near = 1;
-  light.shadow.camera.far = 2048;
+  light.shadow.camera.far = 200;
 
   scene.add(light);
-  scene.add(light.target);
+  scene.add(light.target);*/
 
   console.log("[folk] loading: textures (engine)");
   console.log("[folk] loading: stud (texture)");
@@ -386,10 +401,6 @@ export function engine_loop() {
     player_animate(player, dt);
     player.model.updateMatrixWorld(true);
 
-    light.position.x = player.model.position.x + 128;
-    light.position.y = player.model.position.y + 256;
-    light.position.z = player.model.position.z + 128;
-
     const head_world_pos = new THREE.Vector3();
     player.parts["Head"].getWorldPosition(head_world_pos);
     head_world_pos.y += 0.35;
@@ -412,7 +423,6 @@ export function engine_loop() {
         if (child.isMesh) {
           child.material.transparent = true;
           child.material.opacity = Math.max(0, camera_distance/3);
-          child.material.needsUpdate = true;
         }
       });
     }
@@ -420,6 +430,7 @@ export function engine_loop() {
     camera.lookAt(head_world_pos);
   }
   
+  csm.update();
   renderer.render(scene, camera);
   ui_draw();
 }

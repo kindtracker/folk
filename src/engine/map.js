@@ -1,7 +1,8 @@
 import { mergeGeometries } from "https://esm.sh/three@0.185.1/examples/jsm/utils/BufferGeometryUtils.js";
 import * as THREE from "https://esm.sh/three@0.185.1";
 import * as CANNON from "https://esm.sh/cannon-es";
-import { world, scene, stud, stud_scale, group_map, group_player } from "/engine/folk-engine.js";
+
+import { world, scene, stud, stud_scale, group_map, group_player, csm } from "/engine/folk-engine.js";
 
 export async function map_init(deg, id) {
   const map_res = await fetch(`/api/maps/${id}`);
@@ -91,16 +92,17 @@ export async function map_init(deg, id) {
     const merged_side = mergeGeometries(groups[color].sides);
     const merged_stud = mergeGeometries(groups[color].studs);
 
-    const side_mat = new THREE.MeshStandardMaterial({
+    const side_mat = new THREE.MeshPhongMaterial({
       color: Number(`0x${color}`)
     });
 
-    const stud_mat = new THREE.MeshStandardMaterial({
+    const stud_mat = new THREE.MeshPhongMaterial({
       map: stud,
       transparent: true,
       color: Number(`0x${color}`)
     });
-
+    csm.setupMaterial(side_mat);
+    csm.setupMaterial(stud_mat);
     const mesh_side = new THREE.Mesh(merged_side, side_mat);
     const mesh_stud = new THREE.Mesh(merged_stud, stud_mat);
     mesh_side.receiveShadow = true;

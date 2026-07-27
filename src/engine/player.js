@@ -1,7 +1,8 @@
 import * as THREE from "https://esm.sh/three@0.185.1";
 import * as CANNON from "https://esm.sh/cannon-es";
+
 import { glb_load } from "/engine/obj.js";
-import { engine_move, engine_rot, key_down } from "/engine/folk-engine.js";
+import { engine_move, engine_rot, key_down, csm } from "/engine/folk-engine.js";
 
 const texture_loader = new THREE.TextureLoader();
 
@@ -17,7 +18,6 @@ const mesh_map_texture = {
 };
 
 const head_blend_shader = shader => {
-  shader.fragmentShader = shader.fragmentShader.replace('#include <color_fragment>', '');
   shader.fragmentShader = shader.fragmentShader.replace(
   '#include <map_fragment>',
   `#ifdef USE_MAP
@@ -111,7 +111,9 @@ export function player_init(name) {
 
       child.castShadow = true;
       child.receiveShadow = true;
-      child.material = new THREE.MeshStandardMaterial({ map: texture, transparent: false, vertexColors: mesh_index == 0 });
+      child.material = new THREE.MeshPhongMaterial({ map: texture, transparent: false, vertexColors: false });
+      
+      csm.setupMaterial(child.material);
       if (mesh_index === 0) {
         child.material.onBeforeCompile = head_blend_shader;
       } else {
