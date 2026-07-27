@@ -1,7 +1,7 @@
 # folk
 
-Folk is a web client, designed to run Vortex on every device  
-This not connects to official servers yet.
+Folk is an old Roblox-style web client designed to run Vortex on every device.
+It does not connect to the official servers yet.
 
 ## Roadmap
 - [ ] Have community servers
