@@ -1,13 +1,34 @@
 import { chat_init, chat_draw, chat_toggle, chat_input, mchat_toggle } from "/engine/ui/chat.js";
 import { lb_init, lb_draw } from "/engine/ui/leaderboard.js";
 import { f2_init, f2_draw } from "/engine/ui/f2.js";
-import { width, height } from "/engine/folk-engine.js";
+import { width, height, engine_logs } from "/engine/folk-engine.js";
+import { loaded } from "/main.js";
 
 export let canvas = null;
 export let ctx = null;
 
 export let logo = null;
 export let icon = null;
+
+let logs_scroll = 0;
+
+function ui_loading_draw() {
+  ctx.fillStyle = "#ffffff60";
+  ctx.beginPath();
+  ctx.rect(width/2-80*4, height/2-60*2, 80*8, 60*4);
+  ctx.fill();
+
+  ctx.strokeStyle = "#ffffff60";
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.rect(width/2-80*4, height/2-60*2, 80*8, 60*4);
+  ctx.stroke();
+
+  ctx.font = '400 40px "Montserrat", system-ui, -apple-system, sans-serif';
+  const text_size = ctx.measureText("Loading engine");
+  ctx.fillStyle = "white";
+  ctx.fillText("Loading engine", width/2-text_size.width/2, height/2+10);
+}
 
 export function ui_load() {
   console.log("[folk] loading: ui");
@@ -49,6 +70,8 @@ export function ui_load() {
     }
   });
 
+  ui_loading_draw();
+
   chat_init();
   lb_init();
   f2_init();
@@ -86,6 +109,30 @@ export function ui_draw() {
   ctx.stroke();
 
   chat_draw();
+}
+
+export function ui_logs_draw() {
+  if (!ctx) return;
+  if (loaded) return;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ui_loading_draw();
+  ctx.font = '400 14px "Montserrat", system-ui, -apple-system, sans-serif';
+  let y = 14;
+  for (const log of engine_logs) {
+    if (y-logs_scroll > height) {
+      logs_scroll += 14;
+    }
+    if (log.type == "log") {
+      ctx.fillStyle = "green";
+    } else if (log.type == "warn") {
+      ctx.fillStyle = "yellow";
+    } else if (log.type == "error") {
+      ctx.fillStyle = "red";
+    }
+
+    ctx.fillText(log.message, 0, y-logs_scroll);
+    y += 14;
+  }
 }
 
 export function wrap_text(text, maxWidth) {

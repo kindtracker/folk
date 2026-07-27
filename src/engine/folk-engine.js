@@ -5,7 +5,7 @@ import * as CANNON from "https://esm.sh/cannon-es";
 
 import { map_init } from "/engine/map.js";
 import { player_animate, player_init, player_obj_init } from "/engine/player.js";
-import { ui_draw, ui_load } from "/engine/ui/ui.js";
+import { ui_draw, ui_load, ui_logs_draw } from "/engine/ui/ui.js";
 import { f2_get, f2_reset } from "/engine/ui/f2.js";
 import { chat_input } from "/engine/ui/chat.js";
 import { me } from "/main.js";
@@ -16,6 +16,7 @@ export let camera = null;
 export let renderer = null;
 export let csm = null;
 export let game_canvas = null;
+export let engine_logs = [];
 let light = null;
 
 export let player = null;
@@ -48,6 +49,31 @@ export let players = [];
 function deg(degrees) {
   return degrees * (Math.PI / 180);
 }
+
+const olog = console.log;
+const owarn = console.warn;
+const oerror = console.error;
+
+console.log = (...args) => {
+  const message = args.map(String).join(" ");
+  engine_logs.push({type: "log", message});
+  olog(message);
+  ui_logs_draw();
+};
+
+console.warn = (...args) => {
+  const message = args.map(String).join(" ");
+  engine_logs.push({type: "warn", message});
+  owarn(message);
+  ui_logs_draw();
+};
+
+console.error = (...args) => {
+  const message = args.map(String).join(" ");
+  engine_logs.push({type: "error", message});
+  oerror(message);
+  ui_logs_draw();
+};
 
 export async function engine_load(webgpu = false) {
   width = window.innerWidth;
@@ -224,8 +250,6 @@ export async function engine_load(webgpu = false) {
   player.nametag.position.set(0, 4, 0);
   player.nametag.scale.set(10, 2.5, 10);
   scene.add(player.nametag);
-
-  ui_load();
 }
 
 export async function engine_map_load(id) {
