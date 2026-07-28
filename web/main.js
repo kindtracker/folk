@@ -15,6 +15,7 @@ async function map_init(deg2, id, spawn_points = []) {
   const map_body = new CANNON.Body({
     mass: 0
   });
+  const truss_body = new CANNON.Body({ mass: 0 });
   for (let i = 0; i < map.length; i++) {
     const partj = map[i];
     if (partj.T == "ShirtPad") {
@@ -71,18 +72,28 @@ async function map_init(deg2, id, spawn_points = []) {
     });
     cpart.position.set(p[0], p[1], p[2]);
     cpart.quaternion.setFromEuler(r[0], r[1], r[2]);
-    map_body.addShape(
-      new CANNON.Box(new CANNON.Vec3(s[0] / 2, s[1] / 2, s[2] / 2)),
-      new CANNON.Vec3(p[0], p[1], p[2]),
-      new CANNON.Quaternion().setFromEuler(r[0], r[1], r[2])
-    );
+    if (partj.T == "Part") {
+      map_body.addShape(
+        new CANNON.Box(new CANNON.Vec3(s[0] / 2, s[1] / 2, s[2] / 2)),
+        new CANNON.Vec3(p[0], p[1], p[2]),
+        new CANNON.Quaternion().setFromEuler(r[0], r[1], r[2])
+      );
+    } else if (partj.T == "Truss") {
+      truss_body.addShape(
+        new CANNON.Box(new CANNON.Vec3(s[0] / 2, s[1] / 2, s[2] / 2)),
+        new CANNON.Vec3(p[0], p[1], p[2]),
+        new CANNON.Quaternion().setFromEuler(r[0], r[1], r[2])
+      );
+    } else {
+      console.error(`[folk] found an invalid type on map: ${partj.T}`);
+    }
     if (partj.T == "SpawnLocation") {
       spawn_points.push([p[0], p[1], p[2]]);
     }
   }
-  map_body.collisionFilterGroup = group_map;
-  map_body.collisionFilterMask = group_player;
+  truss_body.climbable = true;
   world.addBody(map_body);
+  world.addBody(truss_body);
   for (const color in groups) {
     const merged_side = mergeGeometries(groups[color].sides);
     const merged_stud = mergeGeometries(groups[color].studs);
@@ -204,8 +215,11 @@ function player_animate(player2, dt) {
   if (player2.on_ground && key_down["Space"]) {
     anim = "fall";
   }
+  if (player2.climbing) {
+    anim = "climb";
+  }
   if (anim == "walk") {
-    const swing2 = Math.PI + Math.sin(time / 180) * Math.PI / 4;
+    const swing2 = Math.PI + Math.sin(player2.walking / 120) * Math.PI / 4;
     engine_rot(player2.parts["Right_Arm"], new THREE3.Vector3(swing2 - Math.PI / 2, Math.PI, 0));
     engine_rot(player2.parts["Left_Arm"], new THREE3.Vector3(-swing2 - Math.PI / 2, Math.PI, 0));
     engine_rot(player2.parts["Right_Leg"], new THREE3.Vector3(-swing2 - Math.PI / 2, Math.PI, 0));
@@ -215,6 +229,12 @@ function player_animate(player2, dt) {
     engine_rot(player2.parts["Left_Arm"], new THREE3.Vector3(-Math.PI + Math.PI / 1.75, Math.PI, 0));
     engine_rot(player2.parts["Right_Leg"], new THREE3.Vector3(-Math.PI - Math.PI / 2, Math.PI, 0));
     engine_rot(player2.parts["Left_Leg"], new THREE3.Vector3(Math.PI - Math.PI / 2, Math.PI, 0));
+  } else if (anim == "climb") {
+    const swing2 = Math.PI + Math.cos(player2.walking / 80) * Math.PI / 8;
+    engine_rot(player2.parts["Right_Arm"], new THREE3.Vector3(swing2 + Math.PI / 1.5, Math.PI, 0));
+    engine_rot(player2.parts["Left_Arm"], new THREE3.Vector3(-swing2 + Math.PI / 1.5, Math.PI, 0));
+    engine_rot(player2.parts["Right_Leg"], new THREE3.Vector3(-swing2 - Math.PI / 1.5, Math.PI, 0));
+    engine_rot(player2.parts["Left_Leg"], new THREE3.Vector3(swing2 - Math.PI / 1.5, Math.PI, 0));
   } else if (anim == "idle") {
     const swing2 = Math.PI + Math.sin(time * 0.01) * 0.05;
     engine_rot(player2.parts["Right_Arm"], new THREE3.Vector3(swing2 - Math.PI / 2, Math.PI, 0));
@@ -261,7 +281,7 @@ function player_init(name2, avatar) {
     console.error(`[folk] player_model_female: ${player_model_female ? "loaded" : "not loaded"}`);
     return null;
   }
-  const player2 = { name: name2, avatar, nametag: null, clothing: [0, 0, 0], colors: [0, 0, 0, 0, 0, 0], body: null, model: null, id: 0, walking: true, on_ground: false, dying: 0, parts: [] };
+  const player2 = { name: name2, avatar, nametag: null, clothing: [0, 0, 0], colors: [0, 0, 0, 0, 0, 0], body: null, model: null, id: 0, hp: 100, walking: false, on_ground: false, climbing: false, dying: 0, parts: [] };
   player2.model = SkeletonUtils.clone(avatar.gender == "male" ? player_model_male : player_model_female);
   player_clothing_load(player2, avatar);
   const canvas2 = document.createElement("canvas");
@@ -413,10 +433,10 @@ function mchat_toggle(value) {
 }
 
 // src/engine/ui/leaderboard.js
-var lb_width = 80 * 2;
+var lb_width = 60 * 3;
 var lb_height = 60 * 6;
 function lb_init() {
-  console.log("[folk] loading: lb");
+  console.log("[folk] loading: leaderboard");
 }
 function lb_draw() {
   ctx.fillStyle = "#80808080";
@@ -428,7 +448,7 @@ function lb_draw() {
   ctx.fillStyle = "white";
   ctx.font = '500 24px "Montserrat", system-ui, -apple-system, sans-serif';
   let y = 65;
-  ctx.fillText("Players", width - lb_width + ctx.measureText("Players").width / 2 - 15, y + 5);
+  ctx.fillText("Players", width - lb_width + ctx.measureText("Players").width / 2 - 5, y + 5);
   y += 34;
   for (const _player of all_players) {
     if (_player == player) {
@@ -468,6 +488,24 @@ function f2_get(dt) {
 }
 function f2_reset() {
   fps_graph = [];
+}
+
+// src/engine/ui/hp_bar.js
+function hp_bar_init() {
+  console.log("[folk] loading: health bar");
+}
+function hp_bar_draw() {
+  ctx.fillStyle = "blue";
+  ctx.font = '500 20px "Montserrat", system-ui, -apple-system, sans-serif';
+  ctx.fillText("Health", width - 80, height - 20);
+  const text_c = ctx.measureText("Health").width / 2;
+  const red = 255 - player.hp * 2.55;
+  const green = player.hp * 2.55;
+  ctx.lineWidth = 10;
+  ctx.strokeStyle = `rgb(${red}, ${green}, 0)`;
+  ctx.moveTo(width - 80 + text_c, height - 40);
+  ctx.lineTo(width - 80 + text_c, height - 40 - player.hp);
+  ctx.stroke();
 }
 
 // src/engine/ui/ui.js
@@ -530,12 +568,14 @@ function ui_load() {
   ui_loading_draw();
   chat_init();
   lb_init();
+  hp_bar_init();
   f2_init();
 }
 function ui_draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   chat_draw();
   lb_draw();
+  hp_bar_draw();
   f2_draw();
   ctx.fillStyle = "#40404080";
   ctx.beginPath();
@@ -628,8 +668,6 @@ var player_mat_needupdate = false;
 var lt = performance.now();
 var stud = null;
 var stud_scale = 4;
-var group_player = 1;
-var group_map = 2;
 var players = [];
 function deg(degrees) {
   return degrees * (Math.PI / 180);
@@ -702,10 +740,10 @@ async function engine_load(webgpu = false) {
     camera
   });
   for (const light of csm.lights) {
-    light.intensity = 3;
+    light.intensity = 4;
   }
   console.log("[folk] loading: ambient light");
-  const ambient_light = new THREE4.AmbientLight(16777215, 1.5);
+  const ambient_light = new THREE4.AmbientLight(16777215, 2);
   scene.add(ambient_light);
   console.log("[folk] loading: textures (engine)");
   console.log("[folk] loading: stud (texture)");
@@ -827,6 +865,15 @@ async function engine_map_load(id) {
   let spawn_pos = await map_init(deg, id, map.spawn_points);
   player.body.position.set(spawn_pos[0], spawn_pos[1], spawn_pos[2]);
 }
+function engine_get_nearby() {
+  let nearby_parts = [];
+  for (let contact of world.contacts) {
+    if (contact.bi === player.body || contact.bj === player.body) {
+      nearby_parts.push(contact);
+    }
+  }
+  return nearby_parts;
+}
 function engine_input(dt) {
   const speed = 16;
   const turn_speed = 10;
@@ -856,9 +903,11 @@ function engine_input(dt) {
     const diff = Math.atan2(Math.sin(target_yaw - player_yaw), Math.cos(target_yaw - player_yaw));
     player_yaw += diff * turn_speed * dt;
     player.body.quaternion.setFromEuler(0, player_yaw, 0);
-    player.walking = true;
+    player.walking += dt * 1e3;
   } else {
-    player.walking = false;
+    if (!player.climbing) {
+      player.walking = 0;
+    }
   }
   if (shift_lock) {
     player.body.quaternion.setFromEuler(0, camera_yaw, 0);
@@ -874,12 +923,16 @@ function engine_input(dt) {
     camera_distance = Math.max(1e-3, Math.min(50, camera_distance));
   }
   player.on_ground = false;
-  for (let contact of world.contacts) {
-    if (contact.bi === player.body || contact.bj === player.body) {
-      const normal = contact.bi === player.body ? contact.ni : new CANNON3.Vec3(-contact.ni.x, -contact.ni.y, -contact.ni.z);
-      if (normal.y < -0.5) {
-        player.on_ground = true;
-      }
+  player.climbing = false;
+  const nearby_parts = engine_get_nearby();
+  for (const contact of nearby_parts) {
+    const normal = contact.bi === player.body ? contact.ni : new CANNON3.Vec3(-contact.ni.x, -contact.ni.y, -contact.ni.z);
+    if (normal.y < -0.5) {
+      player.on_ground = true;
+    }
+    const other = contact.bi === player.body ? contact.bj : contact.bi;
+    if (other.climbable) {
+      player.climbing = true;
     }
   }
   if (movey == 1 && player.on_ground) {

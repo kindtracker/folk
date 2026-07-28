@@ -2,11 +2,11 @@ import { canvas, ctx } from "/engine/ui/ui.js";
 import { width, height, player, players } from "/engine/folk-engine.js";
 import { me } from "/main.js";
 
-let lb_width = 80*2;
+let lb_width = 60*3;
 let lb_height = 60*6;
 
 export function lb_init() {
-  console.log("[folk] loading: lb");
+  console.log("[folk] loading: leaderboard");
 }
 
 export function lb_draw() {
@@ -21,7 +21,7 @@ export function lb_draw() {
   ctx.fillStyle = "white";
   ctx.font = '500 24px "Montserrat", system-ui, -apple-system, sans-serif';
   let y = 65;
-  ctx.fillText("Players", width - lb_width + ctx.measureText("Players").width/2-15, y+5)
+  ctx.fillText("Players", width - lb_width + ctx.measureText("Players").width/2-5, y+5)
   y += 34;
   for (const _player of all_players) {
     if (_player == player) {

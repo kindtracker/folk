@@ -83,9 +83,12 @@ export function player_animate(player, dt) {
   if (player.on_ground && key_down["Space"]) {
     anim = "fall";
   }
+  if (player.climbing) {
+    anim = "climb";
+  }
 
   if (anim == "walk") {
-    const swing = Math.PI + Math.sin(time / 180) * Math.PI/4;
+    const swing = Math.PI + Math.sin(player.walking / 120) * Math.PI/4;
     engine_rot(player.parts["Right_Arm"], new THREE.Vector3(swing - Math.PI / 2, Math.PI, 0));
     engine_rot(player.parts["Left_Arm"], new THREE.Vector3(-swing - Math.PI / 2, Math.PI, 0));
     engine_rot(player.parts["Right_Leg"], new THREE.Vector3(-swing - Math.PI / 2, Math.PI, 0));
@@ -95,6 +98,12 @@ export function player_animate(player, dt) {
     engine_rot(player.parts["Left_Arm"], new THREE.Vector3(-Math.PI + Math.PI/1.75, Math.PI, 0));
     engine_rot(player.parts["Right_Leg"], new THREE.Vector3(-Math.PI - Math.PI / 2, Math.PI, 0));
     engine_rot(player.parts["Left_Leg"], new THREE.Vector3(Math.PI - Math.PI / 2, Math.PI, 0));
+  } else if (anim == "climb") {
+    const swing = Math.PI + Math.cos(player.walking / 80) * Math.PI/8;
+    engine_rot(player.parts["Right_Arm"], new THREE.Vector3(swing + Math.PI/1.5, Math.PI, 0));
+    engine_rot(player.parts["Left_Arm"], new THREE.Vector3(-swing + Math.PI/1.5, Math.PI, 0));
+    engine_rot(player.parts["Right_Leg"], new THREE.Vector3(-swing - Math.PI/1.5, Math.PI, 0));
+    engine_rot(player.parts["Left_Leg"], new THREE.Vector3(swing - Math.PI/1.5, Math.PI, 0));
   } else if (anim == "idle") {
     const swing = Math.PI + Math.sin(time * 0.01) * 0.05;
     engine_rot(player.parts["Right_Arm"], new THREE.Vector3(swing - Math.PI / 2, Math.PI, 0));
@@ -146,7 +155,7 @@ export function player_init(name, avatar) {
     console.error(`[folk] player_model_female: ${player_model_female ? "loaded" : "not loaded"}`);
     return null;
   }
-  const player = { name, avatar, nametag: null, clothing: [0, 0, 0], colors: [0, 0, 0, 0, 0, 0], body: null, model: null, id: 0, walking: true, on_ground: false, dying: 0, parts: [] };
+  const player = { name, avatar, nametag: null, clothing: [0, 0, 0], colors: [0, 0, 0, 0, 0, 0], body: null, model: null, id: 0, hp: 100, walking: false, on_ground: false, climbing: false, dying: 0, parts: [] };
   player.model = SkeletonUtils.clone(avatar.gender == "male" ? player_model_male : player_model_female);
   player_clothing_load(player, avatar);
   

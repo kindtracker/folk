@@ -126,11 +126,11 @@ export async function engine_load(webgpu = false) {
     camera: camera
   });
   for (const light of csm.lights) {
-    light.intensity = 3;
+    light.intensity = 4;
   }
 
   console.log("[folk] loading: ambient light");
-  const ambient_light = new THREE.AmbientLight(0xffffff, 1.5);
+  const ambient_light = new THREE.AmbientLight(0xffffff, 2);
   scene.add(ambient_light);
 
   console.log("[folk] loading: textures (engine)");
@@ -267,6 +267,17 @@ export async function engine_map_load(id) {
   player.body.position.set(spawn_pos[0], spawn_pos[1], spawn_pos[2]);
 }
 
+export function engine_get_nearby() {
+  let nearby_parts = [];
+  for (let contact of world.contacts) {
+    if ((contact.bi === player.body || contact.bj === player.body)) {
+      nearby_parts.push(contact);
+    }
+  }
+
+  return nearby_parts;
+}
+
 export function engine_input(dt) {
   const speed = 16;
   const turn_speed = 10;
@@ -299,9 +310,11 @@ export function engine_input(dt) {
     const diff = Math.atan2(Math.sin(target_yaw - player_yaw), Math.cos(target_yaw - player_yaw));
     player_yaw += diff * turn_speed * dt;
     player.body.quaternion.setFromEuler(0, player_yaw, 0);
-    player.walking = true;
+    player.walking += dt*1000;
   } else {
-    player.walking = false;
+    if (!player.climbing) {
+      player.walking = 0;
+    }
   }
   
   if (shift_lock) {
@@ -320,12 +333,17 @@ export function engine_input(dt) {
   }
 
   player.on_ground = false;
-  for (let contact of world.contacts) {
-    if ((contact.bi === player.body || contact.bj === player.body)) {
-      const normal = contact.bi === player.body ? contact.ni : new CANNON.Vec3(-contact.ni.x, -contact.ni.y, -contact.ni.z);
-      if (normal.y < -0.5) {
-        player.on_ground = true;
-      }
+  player.climbing = false;
+  const nearby_parts = engine_get_nearby();
+  for (const contact of nearby_parts) {
+    const normal = contact.bi === player.body ? contact.ni : new CANNON.Vec3(-contact.ni.x, -contact.ni.y, -contact.ni.z);
+    if (normal.y < -0.5) {
+      player.on_ground = true;
+    }
+
+    const other = contact.bi === player.body ? contact.bj : contact.bi;
+    if (other.climbable) {
+      player.climbing = true;
     }
   }
   

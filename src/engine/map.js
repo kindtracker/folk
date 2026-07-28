@@ -12,6 +12,7 @@ export async function map_init(deg, id, spawn_points = []) {
   const map_body = new CANNON.Body({
     mass: 0
   });
+  const truss_body = new CANNON.Body({ mass: 0 });
 
   for (let i = 0; i < map.length; i++) {
     const partj = map[i];
@@ -79,19 +80,29 @@ export async function map_init(deg, id, spawn_points = []) {
     cpart.position.set(p[0], p[1], p[2]);
     cpart.quaternion.setFromEuler(r[0], r[1], r[2]);
     
-    map_body.addShape(
-      new CANNON.Box(new CANNON.Vec3(s[0]/2, s[1]/2, s[2]/2)),
-      new CANNON.Vec3(p[0], p[1], p[2]),
-      new CANNON.Quaternion().setFromEuler(r[0], r[1],r[2])
-    );
+    if (partj.T == "Part") {
+      map_body.addShape(
+        new CANNON.Box(new CANNON.Vec3(s[0]/2, s[1]/2, s[2]/2)),
+        new CANNON.Vec3(p[0], p[1], p[2]),
+        new CANNON.Quaternion().setFromEuler(r[0], r[1],r[2])
+      );
+    } else if (partj.T == "Truss") {
+      truss_body.addShape(
+        new CANNON.Box(new CANNON.Vec3(s[0]/2, s[1]/2, s[2]/2)),
+        new CANNON.Vec3(p[0], p[1], p[2]),
+        new CANNON.Quaternion().setFromEuler(r[0], r[1],r[2])
+      );
+    } else {
+      console.error(`[folk] found an invalid type on map: ${partj.T}`);
+    }
 
     if (partj.T == "SpawnLocation") {
       spawn_points.push([p[0], p[1], p[2]]);
     }
   }
-  map_body.collisionFilterGroup = group_map;
-  map_body.collisionFilterMask = group_player;
+  truss_body.climbable = true;
   world.addBody(map_body);
+  world.addBody(truss_body);
 
   for (const color in groups) {
     const merged_side = mergeGeometries(groups[color].sides);
