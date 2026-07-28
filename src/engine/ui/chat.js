@@ -85,7 +85,7 @@ export function chat_draw() {
     return;
   }
 
-  ctx.fillStyle = "#40404080";
+  ctx.fillStyle = "#20202080";
   ctx.beginPath();
   ctx.rect(0, 45, chat_width, chat_height);
   ctx.fill();

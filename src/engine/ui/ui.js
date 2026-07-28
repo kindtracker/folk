@@ -1,7 +1,6 @@
 import { chat_init, chat_draw, chat_toggle, chat_input, mchat_toggle } from "/engine/ui/chat.js";
 import { lb_init, lb_draw } from "/engine/ui/leaderboard.js";
 import { f2_init, f2_draw } from "/engine/ui/f2.js";
-import { hp_bar_init, hp_bar_draw } from "/engine/ui/hp_bar.js";
 import { width, height, engine_logs } from "/engine/folk-engine.js";
 import { loaded } from "/main.js";
 
@@ -10,6 +9,8 @@ export let ctx = null;
 
 export let logo = null;
 export let icon = null;
+export let chat_icon = null;
+export let chat2_icon = null;
 
 let logs_scroll = 0;
 
@@ -47,12 +48,22 @@ export function ui_load() {
   ctx = canvas.getContext("2d");
 
   console.log("[folk] loading: images (ui)");
+
   console.log("[folk] loading: folk logo (image)");
   logo = new Image();
   logo.src = "/api/images/logo.png";
+  
   console.log("[folk] loading: folk icon (image)");
   icon = new Image();
   icon.src = "/api/images/icon.png";
+
+  console.log("[folk] loading: chat icon (image)");
+  chat_icon = new Image();
+  chat_icon.src = "/api/images/chat.png";
+
+  console.log("[folk] loading: chat2 icon (image)");
+  chat2_icon = new Image();
+  chat2_icon.src = "/api/images/chat2.png";
 
   console.log("[folk] loading: event listeners (ui)");
   window.addEventListener("resize", () => {
@@ -63,7 +74,7 @@ export function ui_load() {
   canvas.addEventListener("click", (e) => {
     const x = e.clientX;
     const y = e.clientY;
-    if (x >= 120 && x <= 120+40 && y >= 0 && y <= 40) {
+    if (x >= 50 && x <= 50+40 && y >= 0 && y <= 40) {
       mchat_toggle(!chat_toggle);  
       if (chat_toggle) {
         chat_input.focus();
@@ -75,7 +86,6 @@ export function ui_load() {
 
   chat_init();
   lb_init();
-  hp_bar_init();
   f2_init();
 }
 
@@ -83,33 +93,16 @@ export function ui_draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   chat_draw();
   lb_draw();
-  hp_bar_draw();
   f2_draw();
 
-  ctx.fillStyle = "#40404080";
+  ctx.fillStyle = "#20202080";
   ctx.beginPath();
   ctx.rect(0, 0, width, 40);
   ctx.fill();
 
-  ctx.drawImage(logo, 0, 0, 120, 40);
-
-  ctx.strokeStyle = "#ffffff";
-  ctx.lineWidth = 3;
-
-  ctx.beginPath();
-  ctx.moveTo(120 + 5, 10);
-  ctx.lineTo(120 + 40 - 5, 10);
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.moveTo(120 + 5, 20);
-  ctx.lineTo(120 + 40 - 5, 20);
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.moveTo(120 + 5, 30);
-  ctx.lineTo(120 + 40 - 5, 30);
-  ctx.stroke();
+  ctx.drawImage(icon, 0, 0, 40, 40);
+  
+  ctx.drawImage(chat_icon, 50, 3, 35, 35);
 
   chat_draw();
 }

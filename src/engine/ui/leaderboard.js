@@ -10,26 +10,22 @@ export function lb_init() {
 }
 
 export function lb_draw() {
-  ctx.fillStyle = "#80808080";
-  ctx.beginPath();
-  ctx.rect(width - lb_width - 10, 50, lb_width, lb_height);
-  ctx.fill();
-
   const all_players = [player, ...players];
   all_players.sort((a, b) => a.name.localeCompare(b.name));
 
+  lb_height = all_players.length * 25 + 3;
+    
+  ctx.fillStyle = "#20202080";
+  ctx.beginPath();
+  ctx.rect(width - lb_width, 47.5, lb_width, lb_height);
+  ctx.fill();
+
   ctx.fillStyle = "white";
-  ctx.font = '500 24px "Montserrat", system-ui, -apple-system, sans-serif';
-  let y = 65;
-  ctx.fillText("Players", width - lb_width + ctx.measureText("Players").width/2-5, y+5)
-  y += 34;
+  ctx.font = '400 20px "Montserrat", system-ui, -apple-system, sans-serif';
+  let y = 48.5+20;
   for (const _player of all_players) {
-    if (_player == player) {
-      ctx.fillStyle = "#2e2eff";
-    } else {
-      ctx.fillStyle = "white";
-    }
-    ctx.fillText(_player.name, width - lb_width-10, y)
+    ctx.fillStyle = "white";
+    ctx.fillText(_player.name, width - lb_width + 30, y)
     y += 24;
   }
 }

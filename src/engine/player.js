@@ -87,6 +87,8 @@ export function player_animate(player, dt) {
     anim = "climb";
   }
 
+  engine_move(player.parts["Right_Leg"], new THREE.Vector3(0, 0, -1));
+  engine_move(player.parts["Left_Leg"], new THREE.Vector3(0, 0, -1));
   if (anim == "walk") {
     const swing = Math.PI + Math.sin(player.walking / 120) * Math.PI/4;
     engine_rot(player.parts["Right_Arm"], new THREE.Vector3(swing - Math.PI / 2, Math.PI, 0));
@@ -99,11 +101,15 @@ export function player_animate(player, dt) {
     engine_rot(player.parts["Right_Leg"], new THREE.Vector3(-Math.PI - Math.PI / 2, Math.PI, 0));
     engine_rot(player.parts["Left_Leg"], new THREE.Vector3(Math.PI - Math.PI / 2, Math.PI, 0));
   } else if (anim == "climb") {
-    const swing = Math.PI + Math.cos(player.walking / 80) * Math.PI/8;
+    const swing = Math.PI + Math.cos(player.walking / 100) * Math.PI/6;
+    const up = Math.sin(player.walking * 0.01) / 2;
+    const up2 = Math.sin((player.walking+Math.PI/2*1000) * 0.01) / 2;
     engine_rot(player.parts["Right_Arm"], new THREE.Vector3(swing + Math.PI/1.5, Math.PI, 0));
     engine_rot(player.parts["Left_Arm"], new THREE.Vector3(-swing + Math.PI/1.5, Math.PI, 0));
-    engine_rot(player.parts["Right_Leg"], new THREE.Vector3(-swing - Math.PI/1.5, Math.PI, 0));
-    engine_rot(player.parts["Left_Leg"], new THREE.Vector3(swing - Math.PI/1.5, Math.PI, 0));
+    engine_rot(player.parts["Right_Leg"], new THREE.Vector3(-Math.PI - Math.PI/1.75, Math.PI, 0));
+    engine_rot(player.parts["Left_Leg"], new THREE.Vector3(Math.PI - Math.PI/1.75, Math.PI, 0));
+    engine_move(player.parts["Right_Leg"], new THREE.Vector3(0, 0, up-0.5));
+    engine_move(player.parts["Left_Leg"], new THREE.Vector3(0, 0, up2-0.5));
   } else if (anim == "idle") {
     const swing = Math.PI + Math.sin(time * 0.01) * 0.05;
     engine_rot(player.parts["Right_Arm"], new THREE.Vector3(swing - Math.PI / 2, Math.PI, 0));

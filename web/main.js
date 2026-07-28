@@ -218,6 +218,8 @@ function player_animate(player2, dt) {
   if (player2.climbing) {
     anim = "climb";
   }
+  engine_move(player2.parts["Right_Leg"], new THREE3.Vector3(0, 0, -1));
+  engine_move(player2.parts["Left_Leg"], new THREE3.Vector3(0, 0, -1));
   if (anim == "walk") {
     const swing2 = Math.PI + Math.sin(player2.walking / 120) * Math.PI / 4;
     engine_rot(player2.parts["Right_Arm"], new THREE3.Vector3(swing2 - Math.PI / 2, Math.PI, 0));
@@ -230,11 +232,15 @@ function player_animate(player2, dt) {
     engine_rot(player2.parts["Right_Leg"], new THREE3.Vector3(-Math.PI - Math.PI / 2, Math.PI, 0));
     engine_rot(player2.parts["Left_Leg"], new THREE3.Vector3(Math.PI - Math.PI / 2, Math.PI, 0));
   } else if (anim == "climb") {
-    const swing2 = Math.PI + Math.cos(player2.walking / 80) * Math.PI / 8;
+    const swing2 = Math.PI + Math.cos(player2.walking / 100) * Math.PI / 6;
+    const up = Math.sin(player2.walking * 0.01) / 2;
+    const up2 = Math.sin((player2.walking + Math.PI / 2 * 1e3) * 0.01) / 2;
     engine_rot(player2.parts["Right_Arm"], new THREE3.Vector3(swing2 + Math.PI / 1.5, Math.PI, 0));
     engine_rot(player2.parts["Left_Arm"], new THREE3.Vector3(-swing2 + Math.PI / 1.5, Math.PI, 0));
-    engine_rot(player2.parts["Right_Leg"], new THREE3.Vector3(-swing2 - Math.PI / 1.5, Math.PI, 0));
-    engine_rot(player2.parts["Left_Leg"], new THREE3.Vector3(swing2 - Math.PI / 1.5, Math.PI, 0));
+    engine_rot(player2.parts["Right_Leg"], new THREE3.Vector3(-Math.PI - Math.PI / 1.75, Math.PI, 0));
+    engine_rot(player2.parts["Left_Leg"], new THREE3.Vector3(Math.PI - Math.PI / 1.75, Math.PI, 0));
+    engine_move(player2.parts["Right_Leg"], new THREE3.Vector3(0, 0, up - 0.5));
+    engine_move(player2.parts["Left_Leg"], new THREE3.Vector3(0, 0, up2 - 0.5));
   } else if (anim == "idle") {
     const swing2 = Math.PI + Math.sin(time * 0.01) * 0.05;
     engine_rot(player2.parts["Right_Arm"], new THREE3.Vector3(swing2 - Math.PI / 2, Math.PI, 0));
@@ -391,7 +397,7 @@ function chat_draw() {
     chat_input.style.display = "none";
     return;
   }
-  ctx.fillStyle = "#40404080";
+  ctx.fillStyle = "#20202080";
   ctx.beginPath();
   ctx.rect(0, 45, chat_width, chat_height);
   ctx.fill();
@@ -439,24 +445,19 @@ function lb_init() {
   console.log("[folk] loading: leaderboard");
 }
 function lb_draw() {
-  ctx.fillStyle = "#80808080";
-  ctx.beginPath();
-  ctx.rect(width - lb_width - 10, 50, lb_width, lb_height);
-  ctx.fill();
   const all_players = [player, ...players];
   all_players.sort((a, b) => a.name.localeCompare(b.name));
+  lb_height = all_players.length * 25 + 3;
+  ctx.fillStyle = "#20202080";
+  ctx.beginPath();
+  ctx.rect(width - lb_width, 47.5, lb_width, lb_height);
+  ctx.fill();
   ctx.fillStyle = "white";
-  ctx.font = '500 24px "Montserrat", system-ui, -apple-system, sans-serif';
-  let y = 65;
-  ctx.fillText("Players", width - lb_width + ctx.measureText("Players").width / 2 - 5, y + 5);
-  y += 34;
+  ctx.font = '400 20px "Montserrat", system-ui, -apple-system, sans-serif';
+  let y = 48.5 + 20;
   for (const _player of all_players) {
-    if (_player == player) {
-      ctx.fillStyle = "#2e2eff";
-    } else {
-      ctx.fillStyle = "white";
-    }
-    ctx.fillText(_player.name, width - lb_width - 10, y);
+    ctx.fillStyle = "white";
+    ctx.fillText(_player.name, width - lb_width + 30, y);
     y += 24;
   }
 }
@@ -490,29 +491,13 @@ function f2_reset() {
   fps_graph = [];
 }
 
-// src/engine/ui/hp_bar.js
-function hp_bar_init() {
-  console.log("[folk] loading: health bar");
-}
-function hp_bar_draw() {
-  ctx.fillStyle = "blue";
-  ctx.font = '500 20px "Montserrat", system-ui, -apple-system, sans-serif';
-  ctx.fillText("Health", width - 80, height - 20);
-  const text_c = ctx.measureText("Health").width / 2;
-  const red = 255 - player.hp * 2.55;
-  const green = player.hp * 2.55;
-  ctx.lineWidth = 10;
-  ctx.strokeStyle = `rgb(${red}, ${green}, 0)`;
-  ctx.moveTo(width - 80 + text_c, height - 40);
-  ctx.lineTo(width - 80 + text_c, height - 40 - player.hp);
-  ctx.stroke();
-}
-
 // src/engine/ui/ui.js
 var canvas = null;
 var ctx = null;
 var logo = null;
 var icon = null;
+var chat_icon = null;
+var chat2_icon = null;
 var logs_scroll = 0;
 function ui_loading_draw() {
   ctx.fillStyle = "#ffffff60";
@@ -550,6 +535,12 @@ function ui_load() {
   console.log("[folk] loading: folk icon (image)");
   icon = new Image();
   icon.src = "/api/images/icon.png";
+  console.log("[folk] loading: chat icon (image)");
+  chat_icon = new Image();
+  chat_icon.src = "/api/images/chat.png";
+  console.log("[folk] loading: chat2 icon (image)");
+  chat2_icon = new Image();
+  chat2_icon.src = "/api/images/chat2.png";
   console.log("[folk] loading: event listeners (ui)");
   window.addEventListener("resize", () => {
     canvas.width = innerWidth;
@@ -558,7 +549,7 @@ function ui_load() {
   canvas.addEventListener("click", (e) => {
     const x = e.clientX;
     const y = e.clientY;
-    if (x >= 120 && x <= 120 + 40 && y >= 0 && y <= 40) {
+    if (x >= 50 && x <= 50 + 40 && y >= 0 && y <= 40) {
       mchat_toggle(!chat_toggle);
       if (chat_toggle) {
         chat_input.focus();
@@ -568,34 +559,19 @@ function ui_load() {
   ui_loading_draw();
   chat_init();
   lb_init();
-  hp_bar_init();
   f2_init();
 }
 function ui_draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   chat_draw();
   lb_draw();
-  hp_bar_draw();
   f2_draw();
-  ctx.fillStyle = "#40404080";
+  ctx.fillStyle = "#20202080";
   ctx.beginPath();
   ctx.rect(0, 0, width, 40);
   ctx.fill();
-  ctx.drawImage(logo, 0, 0, 120, 40);
-  ctx.strokeStyle = "#ffffff";
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(120 + 5, 10);
-  ctx.lineTo(120 + 40 - 5, 10);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(120 + 5, 20);
-  ctx.lineTo(120 + 40 - 5, 20);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(120 + 5, 30);
-  ctx.lineTo(120 + 40 - 5, 30);
-  ctx.stroke();
+  ctx.drawImage(icon, 0, 0, 40, 40);
+  ctx.drawImage(chat_icon, 50, 3, 35, 35);
   chat_draw();
 }
 function ui_logs_draw() {
@@ -883,10 +859,12 @@ function engine_input(dt) {
   let movex = 0;
   let movey = 0;
   let movez = 0;
-  if (key_down["KeyW"]) movez -= 1;
-  if (key_down["KeyS"]) movez += 1;
-  if (key_down["KeyA"]) movex -= 1;
-  if (key_down["KeyD"]) movex += 1;
+  if (!player.climbing) {
+    if (key_down["KeyW"]) movez -= 1;
+    if (key_down["KeyS"]) movez += 1;
+    if (key_down["KeyA"]) movex -= 1;
+    if (key_down["KeyD"]) movex += 1;
+  }
   if (key_down["ArrowLeft"]) camera_yaw += camera_sens * 5;
   if (key_down["ArrowRight"]) camera_yaw -= camera_sens * 5;
   if (key_down["Space"]) movey += 1;
@@ -903,11 +881,15 @@ function engine_input(dt) {
     const diff = Math.atan2(Math.sin(target_yaw - player_yaw), Math.cos(target_yaw - player_yaw));
     player_yaw += diff * turn_speed * dt;
     player.body.quaternion.setFromEuler(0, player_yaw, 0);
-    player.walking += dt * 1e3;
+    player.walking += dt * (movez == 1 ? 1e3 : movez == -1 ? -1e3 : 1e3);
   } else {
     if (!player.climbing) {
       player.walking = 0;
     }
+  }
+  if (player.climbing) {
+    player.body.velocity.y += key_down["KeyW"] ? 10 : key_down["KeyS"] ? -10 : 0;
+    player.walking += dt * (key_down["KeyW"] ? 1e3 : key_down["KeyS"] ? -1e3 : 0);
   }
   if (shift_lock) {
     player.body.quaternion.setFromEuler(0, camera_yaw, 0);
@@ -935,16 +917,29 @@ function engine_input(dt) {
       player.climbing = true;
     }
   }
-  if (movey == 1 && player.on_ground) {
-    player.body.velocity.y = 50;
+  let ignore = false;
+  if (movey == 1 && (player.on_ground || player.climbing)) {
+    if (player.climbing) {
+      player.body.velocity.x = (Math.cos(player_yaw) + 5 * Math.sin(player_yaw)) * speed;
+      player.body.velocity.z = (Math.sin(player_yaw) + 5 * Math.cos(player_yaw)) * speed;
+      player.body.velocity.y = 200;
+      ignore = true;
+    } else {
+      player.body.velocity.y = 50;
+    }
   }
-  const length = Math.sqrt(movex * movex + movez * movez);
-  if (length > 0) {
-    movex /= length;
-    movez /= length;
+  if (!ignore) {
+    const length = Math.sqrt(movex * movex + movez * movez);
+    if (length > 0) {
+      movex /= length;
+      movez /= length;
+    }
+    player.body.velocity.x = (movex * Math.cos(camera_yaw) + movez * Math.sin(camera_yaw)) * speed;
+    player.body.velocity.z = (-movex * Math.sin(camera_yaw) + movez * Math.cos(camera_yaw)) * speed;
   }
-  player.body.velocity.x = (movex * Math.cos(camera_yaw) + movez * Math.sin(camera_yaw)) * speed;
-  player.body.velocity.z = (-movex * Math.sin(camera_yaw) + movez * Math.cos(camera_yaw)) * speed;
+}
+function engine_move(object, target) {
+  object.position.copy(target);
 }
 function engine_rot(object, target) {
   const quat = new THREE4.Quaternion().setFromEuler(new THREE4.Euler(target.x, target.y, target.z));
@@ -990,6 +985,12 @@ function engine_loop() {
           child.material.opacity = Math.max(0, camera_distance / 3);
         }
       });
+    }
+    if (player.climbing) {
+      player.body.mass = 0;
+      player.body.velocity.set(0, 0, 0);
+    } else {
+      player.body.mass = 1;
     }
     camera.lookAt(head_world_pos);
   }

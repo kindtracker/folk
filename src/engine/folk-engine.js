@@ -288,10 +288,12 @@ export function engine_input(dt) {
   let movex = 0;
   let movey = 0;
   let movez = 0;
-  if (key_down["KeyW"]) movez -= 1;
-  if (key_down["KeyS"]) movez += 1;
-  if (key_down["KeyA"]) movex -= 1;
-  if (key_down["KeyD"]) movex += 1;
+  if (!player.climbing) {
+    if (key_down["KeyW"]) movez -= 1;
+    if (key_down["KeyS"]) movez += 1;
+    if (key_down["KeyA"]) movex -= 1;
+    if (key_down["KeyD"]) movex += 1;
+  }
   if (key_down["ArrowLeft"]) camera_yaw += camera_sens * 5;
   if (key_down["ArrowRight"]) camera_yaw -= camera_sens * 5;
   if (key_down["Space"]) movey += 1;
@@ -310,11 +312,16 @@ export function engine_input(dt) {
     const diff = Math.atan2(Math.sin(target_yaw - player_yaw), Math.cos(target_yaw - player_yaw));
     player_yaw += diff * turn_speed * dt;
     player.body.quaternion.setFromEuler(0, player_yaw, 0);
-    player.walking += dt*1000;
+    player.walking += dt*(movez == 1 ? 1000 : movez == -1 ? -1000 : 1000);
   } else {
     if (!player.climbing) {
       player.walking = 0;
     }
+  }
+
+  if (player.climbing) {
+    player.body.velocity.y += key_down["KeyW"] ? 10 : key_down["KeyS"] ? -10 : 0;
+    player.walking += dt*(key_down["KeyW"] ? 1000 : key_down["KeyS"] ? -1000 : 0);
   }
   
   if (shift_lock) {
@@ -347,15 +354,24 @@ export function engine_input(dt) {
     }
   }
   
-  if (movey == 1 && player.on_ground) {
-    player.body.velocity.y = 50;
+  let ignore = false;
+  if (movey == 1 && (player.on_ground || player.climbing)) {
+    if (player.climbing) {
+      player.body.velocity.x = (Math.cos(player_yaw) + 5 * Math.sin(player_yaw)) * speed;
+      player.body.velocity.z = (Math.sin(player_yaw) + 5 * Math.cos(player_yaw)) * speed;
+      player.body.velocity.y = 200;
+      ignore = true;
+    } else {
+      player.body.velocity.y = 50;
+    }
   }
 
-  const length = Math.sqrt(movex * movex + movez * movez);
-  if (length > 0) { movex /= length; movez /= length; }
-
-  player.body.velocity.x = (movex * Math.cos(camera_yaw) + movez * Math.sin(camera_yaw)) * speed;
-  player.body.velocity.z = (-movex * Math.sin(camera_yaw) + movez * Math.cos(camera_yaw)) * speed;
+  if (!ignore) {
+    const length = Math.sqrt(movex * movex + movez * movez);
+    if (length > 0) { movex /= length; movez /= length; }
+    player.body.velocity.x = (movex * Math.cos(camera_yaw) + movez * Math.sin(camera_yaw)) * speed;
+    player.body.velocity.z = (-movex * Math.sin(camera_yaw) + movez * Math.cos(camera_yaw)) * speed;
+  }
 
   /*
   const dir = new CANNON.Vec3(player.body.velocity.x, 0, player.body.velocity.z);
@@ -462,6 +478,13 @@ export function engine_loop() {
           child.material.opacity = Math.max(0, camera_distance/3);
         }
       });
+    }
+
+    if (player.climbing) {
+      player.body.mass = 0;
+      player.body.velocity.set(0, 0, 0);
+    } else {
+      player.body.mass = 1;
     }
 
     camera.lookAt(head_world_pos);
