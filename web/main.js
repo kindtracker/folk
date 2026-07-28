@@ -125,6 +125,7 @@ async function map_init(deg2, id, spawn_points = []) {
     scene.add(mesh_side);
     scene.add(mesh_stud);
   }
+  window.spawn_points = spawn_points;
   return spawn_points[Math.floor(Math.random() * spawn_points.length)];
 }
 
@@ -288,7 +289,7 @@ function player_init(name2, avatar) {
     console.error(`[folk] player_model_female: ${player_model_female ? "loaded" : "not loaded"}`);
     return null;
   }
-  const player2 = { name: name2, avatar, nametag: null, clothing: [0, 0, 0], colors: [0, 0, 0, 0, 0, 0], body: null, model: null, id: 0, hp: 100, walking: false, on_ground: false, climbing: false, dying: 0, parts: [] };
+  const player2 = { name: name2, avatar, nametag: null, clothing: [0, 0, 0], colors: [0, 0, 0, 0, 0, 0], body: null, model: null, id: 0, hp: 100, walking: false, on_ground: false, climbing: false, parts: [] };
   player2.model = SkeletonUtils.clone(avatar.gender == "male" ? player_model_male : player_model_female);
   player_clothing_load(player2, avatar);
   const canvas2 = document.createElement("canvas");
@@ -355,7 +356,7 @@ function chat_init() {
   chat_input.style.font = '400 14px "Montserrat", system-ui, -apple-system, sans-serif';
   chat_input.style.padding = "4px";
   chat_input.style.left = "5px";
-  chat_input.style.top = `${chat_height + 4}px`;
+  chat_input.style.top = `${chat_height - 8}px`;
   chat_input.style.width = `${chat_width - 22}px`;
   chat_input.style.height = "24px";
   document.body.appendChild(chat_input);
@@ -372,6 +373,31 @@ function chat_init() {
   });
 }
 function chat_message(username, text) {
+  if (username == me.username) {
+    if (text == "/r") {
+      engine_reset_player();
+      return;
+    } else if (text.startsWith("/set_camsen ")) {
+      const value = Number(text.substring("/set_camsen ".length));
+      if (Number.isNaN(value)) {
+        chat.messages.push({
+          username: "System",
+          text: "Invalid number",
+          time: Date.now()
+        });
+        return;
+      }
+      mset_camsen(value);
+      return;
+    } else if (text == "/help") {
+      chat.messages.push({
+        username: "System",
+        text: "/r - Reset the character /set_camsen <number> - Set camera's sensitivity",
+        time: Date.now()
+      });
+      return;
+    }
+  }
   chat.messages.push({
     username,
     text,
@@ -400,24 +426,24 @@ function chat_draw() {
   }
   ctx.fillStyle = "#20202080";
   ctx.beginPath();
-  ctx.rect(0, 45, chat_width, chat_height);
+  ctx.rect(0, 35, chat_width, chat_height);
   ctx.fill();
   chat_input.style.display = "block";
   ctx.fillStyle = "white";
   ctx.font = '400 14px "Montserrat", system-ui, -apple-system, sans-serif';
-  let y = 57.5;
+  let y = 55;
   for (const msg of chat.messages) {
     const p = `[${msg.username}]: ${msg.text}`;
     const prefix = `[${msg.username}]: `;
     const lines = wrap_text(msg.text, chat_width - ctx.measureText(prefix).width);
-    if (y - chat.scroll >= 55) {
+    if (y - chat.scroll >= 35) {
       const prefix2 = `[${msg.username}]: `;
       const color = chat_get_ucolor(msg.username);
       ctx.fillStyle = color;
       ctx.fillText(prefix2, 0, y - chat.scroll);
     }
     for (const line of lines) {
-      if (y - chat.scroll >= 55) {
+      if (y - chat.scroll >= 35) {
         const x = ctx.measureText(prefix).width;
         ctx.fillStyle = "white";
         ctx.fillText(line, x, y - chat.scroll);
@@ -451,11 +477,11 @@ function lb_draw() {
   lb_height = all_players.length * 25 + 3;
   ctx.fillStyle = "#20202080";
   ctx.beginPath();
-  ctx.rect(width - lb_width, 47.5, lb_width, lb_height);
+  ctx.rect(width - lb_width, 35, lb_width, lb_height);
   ctx.fill();
   ctx.fillStyle = "white";
   ctx.font = '400 20px "Montserrat", system-ui, -apple-system, sans-serif';
-  let y = 48.5 + 20;
+  let y = 56;
   for (const _player of all_players) {
     ctx.fillStyle = "white";
     ctx.fillText(_player.name, width - lb_width + 30, y);
@@ -550,7 +576,7 @@ function ui_load() {
   canvas.addEventListener("click", (e) => {
     const x = e.clientX;
     const y = e.clientY;
-    if (x >= 50 && x <= 50 + 40 && y >= 0 && y <= 40) {
+    if (x >= 40 && x <= 40 + 30 && y >= 0 && y <= 30) {
       mchat_toggle(!chat_toggle);
       if (chat_toggle) {
         chat_input.focus();
@@ -569,10 +595,15 @@ function ui_draw() {
   f2_draw();
   ctx.fillStyle = "#20202080";
   ctx.beginPath();
-  ctx.rect(0, 0, width, 40);
+  ctx.rect(0, 0, width, 30);
   ctx.fill();
-  ctx.drawImage(icon, 0, 0, 40, 40);
-  ctx.drawImage(chat_icon, 50, 3, 35, 35);
+  ctx.drawImage(icon, 0, 0, 30, 30);
+  ctx.drawImage(chat_icon, 40, 3, 25, 25);
+  ctx.font = '500 17px "Montserrat", system-ui, -apple-system, sans-serif';
+  ctx.fillStyle = "#ffffffff";
+  ctx.fillText(me.username, width - lb_width + 10, 18);
+  ctx.font = '400 9px "Montserrat", system-ui, -apple-system, sans-serif';
+  ctx.fillText("Volts: 0", width - lb_width + 10, 28);
   chat_draw();
 }
 function ui_logs_draw() {
@@ -670,6 +701,10 @@ console.error = (...args) => {
   oerror(...args);
   ui_logs_draw();
 };
+function mset_camsen(sen) {
+  sen = Number(sen);
+  camera_sens = sen / 1e3;
+}
 async function engine_load(webgpu = false) {
   width = window.innerWidth;
   height = window.innerHeight;
@@ -840,6 +875,10 @@ async function engine_map_load(id) {
   const map_res = await fetch(`/api/games/${id}`);
   const map = await map_res.json();
   let spawn_pos = await map_init(deg, id, map.spawn_points);
+  player.body.position.set(spawn_pos[0], spawn_pos[1], spawn_pos[2]);
+}
+function engine_reset_player() {
+  const spawn_pos = window.spawn_points[Math.floor(Math.random() * window.spawn_points.length)];
   player.body.position.set(spawn_pos[0], spawn_pos[1], spawn_pos[2]);
 }
 function engine_get_nearby() {

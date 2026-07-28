@@ -1,5 +1,5 @@
 import { canvas, ctx, wrap_text } from "/engine/ui/ui.js";
-import { width, height } from "/engine/folk-engine.js";
+import { width, height, engine_reset_player, mset_camsen } from "/engine/folk-engine.js";
 import { me } from "/main.js";
 
 export let chat = {messages: [], scroll: 0};
@@ -35,7 +35,7 @@ export function chat_init() {
   chat_input.style.font = '400 14px "Montserrat", system-ui, -apple-system, sans-serif';
   chat_input.style.padding = "4px";
   chat_input.style.left = "5px";
-  chat_input.style.top = `${chat_height + 4}px`;
+  chat_input.style.top = `${chat_height - 8}px`;
   chat_input.style.width = `${chat_width - 22}px`;
   chat_input.style.height = "24px";
   document.body.appendChild(chat_input);
@@ -55,6 +55,32 @@ export function chat_init() {
 }
 
 export function chat_message(username, text) {
+  if (username == me.username) {
+    if (text == "/r") {
+      engine_reset_player();
+      return;
+    } else if (text.startsWith("/set_camsen ")) {
+      const value = Number(text.substring("/set_camsen ".length));
+      if (Number.isNaN(value)) {
+        chat.messages.push({
+          username: "System",
+          text: "Invalid number",
+          time: Date.now()
+        });
+        return;
+      }
+      mset_camsen(value);
+      return;
+    } else if (text == "/help") {
+      chat.messages.push({
+        username: "System",
+        text: "/r - Reset the character /set_camsen <number> - Set camera's sensitivity",
+        time: Date.now()
+      });
+      return;
+    }
+  }
+
   chat.messages.push({
     username,
     text,
@@ -87,19 +113,19 @@ export function chat_draw() {
 
   ctx.fillStyle = "#20202080";
   ctx.beginPath();
-  ctx.rect(0, 45, chat_width, chat_height);
+  ctx.rect(0, 35, chat_width, chat_height);
   ctx.fill();
   chat_input.style.display = "block";
 
   ctx.fillStyle = "white";
   ctx.font = '400 14px "Montserrat", system-ui, -apple-system, sans-serif';
-  let y = 57.5;
+  let y = 55;
   for (const msg of chat.messages) {
     const p = `[${msg.username}]: ${msg.text}`;
     const prefix = `[${msg.username}]: `;
     const lines = wrap_text(msg.text, chat_width-ctx.measureText(prefix).width);
 
-    if (y-chat.scroll >= 55) {
+    if (y-chat.scroll >= 35) {
       const prefix = `[${msg.username}]: `;
       const color = chat_get_ucolor(msg.username);
       ctx.fillStyle = color;
@@ -107,7 +133,7 @@ export function chat_draw() {
     }
 
     for (const line of lines) {
-      if (y-chat.scroll >= 55) {
+      if (y-chat.scroll >= 35) {
         const x = ctx.measureText(prefix).width;
         ctx.fillStyle = "white";
         ctx.fillText(line, x, y-chat.scroll);

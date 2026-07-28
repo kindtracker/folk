@@ -161,7 +161,7 @@ export function player_init(name, avatar) {
     console.error(`[folk] player_model_female: ${player_model_female ? "loaded" : "not loaded"}`);
     return null;
   }
-  const player = { name, avatar, nametag: null, clothing: [0, 0, 0], colors: [0, 0, 0, 0, 0, 0], body: null, model: null, id: 0, hp: 100, walking: false, on_ground: false, climbing: false, dying: 0, parts: [] };
+  const player = { name, avatar, nametag: null, clothing: [0, 0, 0], colors: [0, 0, 0, 0, 0, 0], body: null, model: null, id: 0, hp: 100, walking: false, on_ground: false, climbing: false, parts: [] };
   player.model = SkeletonUtils.clone(avatar.gender == "male" ? player_model_male : player_model_female);
   player_clothing_load(player, avatar);
   

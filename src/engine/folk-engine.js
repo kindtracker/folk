@@ -75,6 +75,12 @@ console.error = (...args) => {
   ui_logs_draw();
 };
 
+
+export function mset_camsen(sen) {
+  sen = Number(sen);
+  camera_sens = sen/1000;
+}
+
 export async function engine_load(webgpu = false) {
   width = window.innerWidth;
   height = window.innerHeight;
@@ -264,6 +270,11 @@ export async function engine_map_load(id) {
   const map = await map_res.json();
 
   let spawn_pos = await map_init(deg, id, map.spawn_points);
+  player.body.position.set(spawn_pos[0], spawn_pos[1], spawn_pos[2]);
+}
+
+export function engine_reset_player() {
+  const spawn_pos = window.spawn_points[Math.floor(Math.random() * window.spawn_points.length)];
   player.body.position.set(spawn_pos[0], spawn_pos[1], spawn_pos[2]);
 }
 

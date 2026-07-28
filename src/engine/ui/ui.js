@@ -1,8 +1,8 @@
 import { chat_init, chat_draw, chat_toggle, chat_input, mchat_toggle } from "/engine/ui/chat.js";
-import { lb_init, lb_draw } from "/engine/ui/leaderboard.js";
+import { lb_init, lb_draw, lb_width } from "/engine/ui/leaderboard.js";
 import { f2_init, f2_draw } from "/engine/ui/f2.js";
 import { width, height, engine_logs } from "/engine/folk-engine.js";
-import { loaded } from "/main.js";
+import { me, loaded } from "/main.js";
 
 export let canvas = null;
 export let ctx = null;
@@ -74,7 +74,7 @@ export function ui_load() {
   canvas.addEventListener("click", (e) => {
     const x = e.clientX;
     const y = e.clientY;
-    if (x >= 50 && x <= 50+40 && y >= 0 && y <= 40) {
+    if (x >= 40 && x <= 40+30 && y >= 0 && y <= 30) {
       mchat_toggle(!chat_toggle);  
       if (chat_toggle) {
         chat_input.focus();
@@ -97,12 +97,17 @@ export function ui_draw() {
 
   ctx.fillStyle = "#20202080";
   ctx.beginPath();
-  ctx.rect(0, 0, width, 40);
+  ctx.rect(0, 0, width, 30);
   ctx.fill();
 
-  ctx.drawImage(icon, 0, 0, 40, 40);
-  
-  ctx.drawImage(chat_icon, 50, 3, 35, 35);
+  ctx.drawImage(icon, 0, 0, 30, 30);
+  ctx.drawImage(chat_icon, 40, 3, 25, 25);
+
+  ctx.font = '500 17px "Montserrat", system-ui, -apple-system, sans-serif';
+  ctx.fillStyle = "#ffffffff";
+  ctx.fillText(me.username, width - lb_width + 10, 18);
+  ctx.font = '400 9px "Montserrat", system-ui, -apple-system, sans-serif';
+  ctx.fillText("Volts: 0", width - lb_width + 10, 28);
 
   chat_draw();
 }

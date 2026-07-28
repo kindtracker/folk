@@ -139,5 +139,6 @@ export async function map_init(deg, id, spawn_points = []) {
     scene.add(mesh_stud);
   }
 
+  window.spawn_points = spawn_points;
   return spawn_points[Math.floor(Math.random() * spawn_points.length)];
 }
