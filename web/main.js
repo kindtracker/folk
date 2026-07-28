@@ -913,7 +913,7 @@ function engine_input(dt) {
       player.on_ground = true;
     }
     const other = contact.bi === player.body ? contact.bj : contact.bi;
-    if (other.climbable) {
+    if (other.climbable && normal.y > -0.5) {
       player.climbing = true;
     }
   }
