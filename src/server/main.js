@@ -7,6 +7,12 @@ spawn("node", ["src/server/instance.js", "6977"], {
   stdio: "inherit",
 });
 
+const cors_headers = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type"
+};
+
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, "http://localhost:6969");
   const pathname = url.pathname;
@@ -25,7 +31,7 @@ const server = http.createServer(async (req, res) => {
     };
     
     const mime_type = mime_types[ext] || "application/octet-stream";
-    res.writeHead(200, { "Content-Type": mime_type });
+    res.writeHead(200, { "Content-Type": mime_type, ...cors_headers });
     return res.end(data);
   } catch (err) {
     try {
@@ -38,6 +44,7 @@ const server = http.createServer(async (req, res) => {
       }
       res.writeHead(resp.status, {
         "Content-Type": resp.headers.get("content-type") ?? "application/octet-stream",
+        ...cors_headers  
       });
       const buffer = Buffer.from(await resp.arrayBuffer());
       res.end(buffer);

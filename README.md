@@ -31,3 +31,7 @@ Join VoDevs, Vortiety or Vortex then ping me (0kindtracker/0/kindtracker)
 ## Credits
 
 - https://github.com/inuk84/Vortex2plus2 Some assets like oof.mp4, sword_slash.mp4, Crossroads json, and NDS json from Vortex2+2
+
+- THREE.js I used THREE.js to make 3DS graphics
+
+- CANNON.js This is physics engine
