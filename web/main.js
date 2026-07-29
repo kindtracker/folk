@@ -23,35 +23,35 @@ async function map_init(deg2, id, spawn_points = []) {
     }
     const p = partj.P;
     const r = [deg2(partj.R[0]), deg2(partj.R[1]), deg2(partj.R[2])];
-    const s = partj.S;
+    const s2 = partj.S;
     const tr_hex = partj.Tr.toString(16).padStart(2, "0");
     if (!groups[partj.C + tr_hex]) groups[partj.C + tr_hex] = { sides: [], studs: [] };
-    const geom = new THREE.BoxGeometry(s[0], s[1], s[2]);
+    const geom = new THREE.BoxGeometry(s2[0], s2[1], s2[2]);
     geom.rotateX(r[0]);
     geom.rotateY(r[1]);
     geom.rotateZ(r[2]);
     geom.translate(p[0], p[1], p[2]);
-    const top = new THREE.PlaneGeometry(s[0], s[2]);
+    const top = new THREE.PlaneGeometry(s2[0], s2[2]);
     top.rotateX(-Math.PI / 2);
-    top.translate(0, s[1] / 2, 0);
-    const bottom = new THREE.PlaneGeometry(s[0], s[2]);
+    top.translate(0, s2[1] / 2, 0);
+    const bottom = new THREE.PlaneGeometry(s2[0], s2[2]);
     bottom.rotateX(Math.PI / 2);
-    bottom.translate(0, -s[1] / 2, 0);
+    bottom.translate(0, -s2[1] / 2, 0);
     top.rotateX(r[0]);
     top.rotateY(r[1]);
     top.rotateZ(r[2]);
     top.translate(p[0], p[1], p[2]);
     let uv = top.attributes.uv;
     uv.setXY(0, 0, 0);
-    uv.setXY(1, s[0] / stud_scale, 0);
-    uv.setXY(2, 0, s[2] / stud_scale);
-    uv.setXY(3, s[0] / stud_scale, s[2] / stud_scale);
+    uv.setXY(1, s2[0] / stud_scale, 0);
+    uv.setXY(2, 0, s2[2] / stud_scale);
+    uv.setXY(3, s2[0] / stud_scale, s2[2] / stud_scale);
     uv.needsUpdate = true;
     uv = bottom.attributes.uv;
     uv.setXY(0, 0, 0);
-    uv.setXY(1, s[0] / stud_scale, 0);
-    uv.setXY(2, 0, s[2] / stud_scale);
-    uv.setXY(3, s[0] / stud_scale, s[2] / stud_scale);
+    uv.setXY(1, s2[0] / stud_scale, 0);
+    uv.setXY(2, 0, s2[2] / stud_scale);
+    uv.setXY(3, s2[0] / stud_scale, s2[2] / stud_scale);
     uv.needsUpdate = true;
     bottom.rotateX(r[0]);
     bottom.rotateY(r[1]);
@@ -64,24 +64,23 @@ async function map_init(deg2, id, spawn_points = []) {
       mass: 0,
       shape: new CANNON.Box(
         new CANNON.Vec3(
-          s[0] / 2,
-          s[1] / 2,
-          s[2] / 2
+          s2[0] / 2,
+          s2[1] / 2,
+          s2[2] / 2
         )
       )
     });
     cpart.position.set(p[0], p[1], p[2]);
     cpart.quaternion.setFromEuler(r[0], r[1], r[2]);
-    if (partj.T == "Truss" || s[1] < 1.5) {
-      console.log("test");
+    if (partj.T == "Truss" || s2[1] < 1.5) {
       truss_body.addShape(
-        new CANNON.Box(new CANNON.Vec3(s[0] / 2, s[1] / 2, s[2] / 2)),
+        new CANNON.Box(new CANNON.Vec3(s2[0] / 2, s2[1] / 2, s2[2] / 2)),
         new CANNON.Vec3(p[0], p[1], p[2]),
         new CANNON.Quaternion().setFromEuler(r[0], r[1], r[2])
       );
     } else if (partj.T == "Part") {
       map_body.addShape(
-        new CANNON.Box(new CANNON.Vec3(s[0] / 2, s[1] / 2, s[2] / 2)),
+        new CANNON.Box(new CANNON.Vec3(s2[0] / 2, s2[1] / 2, s2[2] / 2)),
         new CANNON.Vec3(p[0], p[1], p[2]),
         new CANNON.Quaternion().setFromEuler(r[0], r[1], r[2])
       );
@@ -202,7 +201,7 @@ function player_obj_init(scene2, callback) {
     })
   ]);
 }
-function player_animate(player2, dt) {
+function player_animate(player2, dt, lid) {
   const time = Date.now();
   let swing = Math.PI;
   if (player2.walking) {
@@ -214,7 +213,7 @@ function player_animate(player2, dt) {
   } else if (player2.walking) {
     anim = "walk";
   }
-  if (player2.on_ground && key_down["Space"]) {
+  if (player2.on_ground && player2.id == lid && key_down["Space"]) {
     anim = "fall";
   }
   if (player2.climbing) {
@@ -251,11 +250,11 @@ function player_animate(player2, dt) {
     engine_rot(player2.parts["Left_Leg"], new THREE3.Vector3(Math.PI - Math.PI / 2, Math.PI, 0));
   }
 }
-function player_clothing_load(player2, clothing) {
+function player_avatar_load(player2, avatar) {
   let mesh_index = 0;
   player2.model.traverse((child) => {
     if (child.isMesh) {
-      const texture = texture_loader.load("api/clothing/image/" + clothing[mesh_map[mesh_index]]);
+      const texture = texture_loader.load("api/clothing/image/" + avatar[mesh_map[mesh_index]]);
       if (mesh_index == 0) {
         texture.repeat.set(2.8, 2.8);
         texture.flipY = false;
@@ -281,7 +280,7 @@ function player_clothing_load(player2, clothing) {
     }
   });
 }
-function player_init(name2, avatar) {
+function player_init(name2, id, avatar) {
   console.log(`[folk] loading: player (name: ${name2})`);
   if (!player_model_male || !player_model_female) {
     console.error("[folk] player model not loaded yet");
@@ -289,9 +288,9 @@ function player_init(name2, avatar) {
     console.error(`[folk] player_model_female: ${player_model_female ? "loaded" : "not loaded"}`);
     return null;
   }
-  const player2 = { name: name2, avatar, nametag: null, clothing: [0, 0, 0], colors: [0, 0, 0, 0, 0, 0], body: null, model: null, id: 0, hp: 100, walking: false, on_ground: false, climbing: false, parts: [] };
+  const player2 = { name: name2, id, avatar, nametag: null, body: null, model: null, hp: 100, walking: false, on_ground: false, climbing: false, parts: [] };
   player2.model = SkeletonUtils.clone(avatar.gender == "male" ? player_model_male : player_model_female);
-  player_clothing_load(player2, avatar);
+  player_avatar_load(player2, avatar);
   const canvas2 = document.createElement("canvas");
   const ctx2 = canvas2.getContext("2d");
   canvas2.width = 1024;
@@ -365,15 +364,15 @@ function chat_init() {
     if (e.key === "Enter") {
       const text = chat_input.value.trim();
       if (text) {
-        chat_message(me.username, chat_input.value.trim());
+        chat_message(me.username, chat_input.value.trim(), true);
         chat_input.value = "";
       }
       chat_input.blur();
     }
   });
 }
-function chat_message(username, text) {
-  if (username == me.username) {
+function chat_message(username, text, me2 = false) {
+  if (username == me2.username) {
     if (text == "/r") {
       engine_reset_player();
       return;
@@ -407,6 +406,9 @@ function chat_message(username, text) {
     chat.messages.shift();
   }
   chat.scroll = Math.max(0, chat_get_height() - chat_height + 50);
+  if (me2) {
+    window.chat_callback(username, text);
+  }
 }
 function chat_get_ucolor(username) {
   let value = 0;
@@ -856,7 +858,7 @@ async function engine_load(webgpu = false) {
   });
   console.log("[folk] loading: player");
   await player_obj_init(scene);
-  player = player_init(me.username, me.avatar);
+  player = player_init(me.username, me.id, me.avatar);
   scene.add(player.model);
   world.addBody(player.body);
   player.body.position.set(0, 500, 0);
@@ -933,6 +935,7 @@ function engine_input(dt) {
   }
   if (shift_lock) {
     player.body.quaternion.setFromEuler(0, camera_yaw, 0);
+    player_yaw = camera_yaw;
   }
   if (key_down["KeyI"]) {
     player_mat_needupdate = true;
@@ -1002,7 +1005,7 @@ function engine_loop() {
     player.model.quaternion.copy(player.body.quaternion);
     player.nametag.position.copy(player.model.position);
     player.nametag.position.y += 5.75;
-    player_animate(player, dt);
+    player_animate(player, dt, player.id);
     player.model.updateMatrixWorld(true);
     const head_world_pos = new THREE4.Vector3();
     player.parts["Head"].getWorldPosition(head_world_pos);
@@ -1037,18 +1040,116 @@ function engine_loop() {
   csm.update();
   renderer.render(scene, camera);
   ui_draw();
+  window.frame_callback();
 }
 
-// src/main.js
-var me_res = await fetch("/api/me");
-var me = await me_res.json();
+// src/multiplayer/folk-multiplayer.js
+var ws = null;
+function multiplayer_init(url, port = 6977) {
+  console.log("[folk] loading: multiplayer");
+  console.log(`[folk] connecting: ws://${url}:${port}`);
+  ws = new WebSocket(`ws://${url}:${port}`);
+  ws.onopen = () => {
+    console.log("[folk] connected to the server");
+    ws.send(JSON.stringify({
+      type: "join",
+      username: me.username,
+      id: me.id
+    }));
+  };
+  ws.onmessage = (event) => {
+    const message = JSON.parse(event.data);
+    if (message.type == "update") {
+      for (const oplayer of message.players) {
+        if (oplayer.id == player.id) {
+          continue;
+        }
+        let woplayer = players[oplayer.username];
+        if (!woplayer) {
+          if (!oplayer.avatar || Object.keys(oplayer.avatar).length == 0) {
+            continue;
+          }
+          woplayer = player_init(oplayer.username, oplayer.id, oplayer.avatar);
+          players[oplayer.username] = woplayer;
+          scene.add(woplayer.model);
+        }
+        woplayer.model.position.set(oplayer.pos[0], oplayer.pos[1], oplayer.pos[2]);
+        woplayer.model.rotation.set(0, oplayer.yaw, 0);
+        woplayer.on_ground = oplayer.on_ground;
+        woplayer.climbing = oplayer.climbing;
+        woplayer.walking = oplayer.walking;
+        woplayer.hp = oplayer.hp;
+        player_animate(woplayer, player.id);
+      }
+    } else if (message.type == "chat") {
+      if (message.id != player.id) {
+        chat_message(message.username, message.message);
+      }
+    }
+  };
+  ws.onclose = () => {
+    console.log("[folk] server disconnected");
+  };
+  ws.onerror = (err) => {
+    console.error(`[folk] ${err.message}`);
+  };
+}
+function multiplayer_tick() {
+  ws.send(JSON.stringify({
+    type: "player",
+    pos: [
+      player.body.position.x,
+      player.body.position.y,
+      player.body.position.z
+    ],
+    yaw: shift_lock ? camera_yaw : player_yaw,
+    hp: player.health,
+    walking: player.walking,
+    climbing: player.climbing,
+    on_ground: player.on_ground,
+    avatar: player.avatar
+  }));
+}
+function multiplayer_chat(username, message) {
+  ws.send(JSON.stringify({
+    type: "chat",
+    message
+  }));
+}
+
+// src/client/main.js
 var loaded = false;
 var params = new URL(document.location.toString()).searchParams;
 var webgpu_enabled = params.get("webgpu") ? true : false;
 var game_id = params.get("game_id");
 game_id = game_id ? game_id : 1;
+var me = null;
+if (params.get("me")) {
+  me = JSON.parse(decodeURIComponent(params.get("me")));
+  if (me != null && me != void 0) {
+    localStorage.setItem("me", me);
+  }
+} else if (me == null) {
+  const me_res = await fetch("/api/me");
+  me = await me_res.json();
+}
+var last = performance.now();
+var s = 4;
+function frame_callback() {
+  const now = performance.now();
+  if (now - last > 1e3 / 24) {
+    s -= 1;
+    if (s <= 0) {
+      multiplayer_tick();
+      last = now;
+    }
+  }
+}
+window.frame_callback = frame_callback;
+window.chat_callback = multiplayer_chat;
 await engine_load(webgpu_enabled);
 await engine_map_load(game_id);
+multiplayer_init("127.0.0.1", 6977);
 loaded = true;
 engine_loop();
 export {

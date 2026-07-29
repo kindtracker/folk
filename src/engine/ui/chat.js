@@ -1,6 +1,6 @@
-import { canvas, ctx, wrap_text } from "/engine/ui/ui.js";
 import { width, height, engine_reset_player, mset_camsen } from "/engine/folk-engine.js";
-import { me } from "/main.js";
+import { canvas, ctx, wrap_text } from "/engine/ui/ui.js";
+import { me } from "/client/main.js";
 
 export let chat = {messages: [], scroll: 0};
 export let chat_input = null;
@@ -46,7 +46,7 @@ export function chat_init() {
       const text = chat_input.value.trim();
 
       if (text) {
-        chat_message(me.username, chat_input.value.trim());
+        chat_message(me.username, chat_input.value.trim(), true);
         chat_input.value = "";
       }
       chat_input.blur();
@@ -54,7 +54,7 @@ export function chat_init() {
   });
 }
 
-export function chat_message(username, text) {
+export function chat_message(username, text, me = false) {
   if (username == me.username) {
     if (text == "/r") {
       engine_reset_player();
@@ -91,6 +91,10 @@ export function chat_message(username, text) {
     chat.messages.shift();
   }
   chat.scroll = Math.max(0, chat_get_height() - chat_height + 50);
+
+  if (me) {
+    window.chat_callback(username, text);
+  }
 }
 
 export function chat_get_ucolor(username) {

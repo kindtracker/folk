@@ -1,13 +1,18 @@
+import { spawn } from "node:child_process";
 import http from "node:http";
 import fs from "fs";
 import path from "path";
+
+spawn("node", ["src/server/instance.js", "6977"], {
+  stdio: "inherit",
+});
 
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, "http://localhost:6969");
   const pathname = url.pathname;
   const parts = pathname.split("/");
   let filepath = path.join("web", pathname === "/" ? "index.html" : pathname);
-  console.log(`[folk] url: ${url} pathname: ${pathname}`);
+  console.log(`[folk] web: url: ${url} pathname: ${pathname}`);
 
   try {
     let data = fs.readFileSync(filepath);
@@ -25,7 +30,7 @@ const server = http.createServer(async (req, res) => {
   } catch (err) {
     try {
       const rurl = `http://playvortex.io${pathname}${url.search}`;
-      console.log("[folk] directing request to " + rurl);
+      console.log("[folk] web: directing request to " + rurl);
       let resp = await fetch(rurl);
       if (!resp.ok) {
         res.writeHead(resp.status);
@@ -37,7 +42,7 @@ const server = http.createServer(async (req, res) => {
       const buffer = Buffer.from(await resp.arrayBuffer());
       res.end(buffer);
     } catch (err) {
-      console.error(`[folk] error: ${err.message}`);
+      console.error(`[folk] web: error: ${err.message}`);
       res.writeHead(404);
       return res.end("error message: " + err.message);
     }

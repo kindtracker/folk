@@ -66,9 +66,9 @@ export function player_obj_init(scene, callback) {
   ]);
 }
 
-export function player_animate(player, dt) {
+export function player_animate(player, dt, lid) {
   const time = Date.now();
-  
+
   let swing = Math.PI;
   if (player.walking) {
     swing += Math.sin(time / 90) * Math.PI/2;
@@ -80,7 +80,7 @@ export function player_animate(player, dt) {
   } else if (player.walking) {
     anim = "walk";
   }
-  if (player.on_ground && key_down["Space"]) {
+  if (player.on_ground && player.id == lid && key_down["Space"]) {
     anim = "fall";
   }
   if (player.climbing) {
@@ -119,11 +119,11 @@ export function player_animate(player, dt) {
   }
 }
 
-export function player_clothing_load(player, clothing) {
+export function player_avatar_load(player, avatar) {
   let mesh_index = 0;
   player.model.traverse((child) => {
     if (child.isMesh) {
-      const texture = texture_loader.load("api/clothing/image/" + clothing[mesh_map[mesh_index]]);
+      const texture = texture_loader.load("api/clothing/image/" + avatar[mesh_map[mesh_index]]);
 
       if (mesh_index == 0) {
         texture.repeat.set(2.8, 2.8);
@@ -153,7 +153,7 @@ export function player_clothing_load(player, clothing) {
   });
 }
 
-export function player_init(name, avatar) {
+export function player_init(name, id, avatar) {
   console.log(`[folk] loading: player (name: ${name})`)
   if (!player_model_male || !player_model_female) {
     console.error("[folk] player model not loaded yet");
@@ -161,9 +161,9 @@ export function player_init(name, avatar) {
     console.error(`[folk] player_model_female: ${player_model_female ? "loaded" : "not loaded"}`);
     return null;
   }
-  const player = { name, avatar, nametag: null, clothing: [0, 0, 0], colors: [0, 0, 0, 0, 0, 0], body: null, model: null, id: 0, hp: 100, walking: false, on_ground: false, climbing: false, parts: [] };
+  const player = { name, id, avatar, nametag: null, body: null, model: null, hp: 100, walking: false, on_ground: false, climbing: false, parts: [] };
   player.model = SkeletonUtils.clone(avatar.gender == "male" ? player_model_male : player_model_female);
-  player_clothing_load(player, avatar);
+  player_avatar_load(player, avatar);
   
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");

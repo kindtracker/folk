@@ -8,7 +8,7 @@ import { player_animate, player_init, player_obj_init } from "/engine/player.js"
 import { ui_draw, ui_load, ui_logs_draw } from "/engine/ui/ui.js";
 import { f2_get, f2_reset } from "/engine/ui/f2.js";
 import { chat_input } from "/engine/ui/chat.js";
-import { me } from "/main.js";
+import { me } from "/client/main.js";
 
 export let world = null;
 export let scene = null;
@@ -21,10 +21,10 @@ let light = null;
 
 export let player = null;
 
-let camera_distance = 10;
-let camera_yaw = 0;
-let camera_pitch = Math.PI / 10;
-let player_yaw = 0;
+export let camera_distance = 10;
+export let camera_yaw = 0;
+export let camera_pitch = Math.PI / 10;
+export let player_yaw = 0;
 
 export let camera_sens = 0.007;
 export let mouse_down = [false, false, false];
@@ -249,7 +249,7 @@ export async function engine_load(webgpu = false) {
 
   console.log("[folk] loading: player");
   await player_obj_init(scene);
-  player = player_init(me.username, me.avatar);
+  player = player_init(me.username, me.id, me.avatar);
   scene.add(player.model);
   world.addBody(player.body);
   player.body.position.set(0, 500, 0);
@@ -337,6 +337,7 @@ export function engine_input(dt) {
   
   if (shift_lock) {
     player.body.quaternion.setFromEuler(0, camera_yaw, 0);
+    player_yaw = camera_yaw;
   }
 
   if (key_down["KeyI"]) {
@@ -462,7 +463,7 @@ export function engine_loop() {
     player.nametag.position.copy(player.model.position);
     player.nametag.position.y += 5.75;
 
-    player_animate(player, dt);
+    player_animate(player, dt, player.id);
     player.model.updateMatrixWorld(true);
 
     const head_world_pos = new THREE.Vector3();
@@ -504,4 +505,5 @@ export function engine_loop() {
   csm.update();
   renderer.render(scene, camera);
   ui_draw();
+  window.frame_callback();
 }

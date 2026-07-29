@@ -1,6 +1,6 @@
 import { canvas, ctx } from "/engine/ui/ui.js";
 import { width, height, player, players } from "/engine/folk-engine.js";
-import { me } from "/main.js";
+import { me } from "/client/main.js";
 
 export let lb_width = 60*3;
 export let lb_height = 60*6;

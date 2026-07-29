@@ -1,16 +1,15 @@
-import JavaScriptObfuscator from "javascript-obfuscator";
 import { writeFile } from "node:fs/promises";
 import { build } from "esbuild";
 import path from "node:path";
 
-const obfc = false;
+const minify = false;
 
 const result = await build({
-  entryPoints: ["src/main.js"],
+  entryPoints: ["src/client/main.js"],
   bundle: true,
   format: "esm",
   write: false,
-  minify: obfc,
+  minify,
   absWorkingDir: process.cwd(),
   plugins: [
     {
@@ -26,37 +25,5 @@ const result = await build({
   ]
 });
 
-let code = result.outputFiles[0].text;
-
-if (obfc) {
-  code = JavaScriptObfuscator.obfuscate(code, {
-    compact: true,
-  
-    stringArray: true,
-    stringArrayEncoding: ["rc4"],
-    rotateStringArray: true,
-    reservedNames: [
-      "THREE",
-      "CANNON"
-    ],
-    stringArrayThreshold: 1,
-
-    controlFlowFlattening: true,
-    controlFlowFlatteningThreshold: 0.25,
-
-    deadCodeInjection: true,
-    deadCodeInjectionThreshold: 1,
-
-    transformObjectKeys: true,
-    unicodeEscapeSequence: true,
-    identifierNamesGenerator: "hexadecimal",
-
-    renameGlobals: true,
-    selfDefending: true,
-    debugProtection: false
-  });
-
-  await writeFile("web/main.js", code.getObfuscatedCode());
-} else {
-  await writeFile("web/main.js", code);
-}
+const code = result.outputFiles[0].text;
+await writeFile("web/main.js", code);

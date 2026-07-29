@@ -81,7 +81,6 @@ export async function map_init(deg, id, spawn_points = []) {
     cpart.quaternion.setFromEuler(r[0], r[1], r[2]);
     
     if (partj.T == "Truss" || s[1] < 1.5) {
-      console.log('test')
       truss_body.addShape(
         new CANNON.Box(new CANNON.Vec3(s[0]/2, s[1]/2, s[2]/2)),
         new CANNON.Vec3(p[0], p[1], p[2]),

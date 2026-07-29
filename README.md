@@ -20,7 +20,8 @@ It does not connect to the official servers yet.
 ```
 $ git clone https://github.com/kindtracker/folk
 $ cd folk_pub
-$ node folk.js
+$ npm install
+$ npm run server
 ```
 Open http://127.0.0.1:6969/?game_id=1&webgpu=true
 

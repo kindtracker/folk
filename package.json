@@ -1,10 +1,13 @@
 {
   "scripts": {
     "build": "node build.js",
-    "server": "node folk.js"
+    "server": "node src/server/main.js"
   },
   "devDependencies": {
-    "esbuild": "^0.28.1",
-    "javascript-obfuscator": "^5.5.0"
-  }
+    "esbuild": "^0.28.1"
+  },
+  "dependencies": {
+    "ws": "^8.21.1"
+  },
+  "type": "module"
 }
