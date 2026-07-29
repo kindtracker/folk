@@ -372,9 +372,12 @@ function chat_init() {
   });
 }
 function chat_message(username, text, me2 = false) {
-  if (username == me2.username) {
+  if (me2) {
     if (text == "/r") {
       engine_reset_player();
+      return;
+    } else if (text == "/leave") {
+      window.close();
       return;
     } else if (text.startsWith("/set_camsen ")) {
       const value = Number(text.substring("/set_camsen ".length));
@@ -391,7 +394,7 @@ function chat_message(username, text, me2 = false) {
     } else if (text == "/help") {
       chat.messages.push({
         username: "System",
-        text: "/r - Reset the character /set_camsen <number> - Set camera's sensitivity",
+        text: "/r - Reset the character /leave - Close the window /set_camsen <number> - Set camera's sensitivity",
         time: Date.now()
       });
       return;
