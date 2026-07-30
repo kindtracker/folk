@@ -21,15 +21,13 @@ export async function map_init(deg, id, spawn_points = []) {
     }
 
     const p = partj.P;
-    const r = [deg(partj.R[0]), deg(partj.R[1]), deg(partj.R[2])];
+    const euler = new THREE.Euler(deg(partj.R[0]), deg(partj.R[1]), deg(partj.R[2]), "XYZ");
     const s = partj.S;
     const tr_hex = partj.Tr.toString(16).padStart(2, "0");
     if (!groups[partj.C+tr_hex]) groups[partj.C+tr_hex] = {sides: [], studs: []};
 
     const geom = new THREE.BoxGeometry(s[0], s[1], s[2]);
-    geom.rotateX(r[0]);
-    geom.rotateY(r[1]);
-    geom.rotateZ(r[2]);
+    geom.applyMatrix4(new THREE.Matrix4().makeRotationFromEuler(euler));
     geom.translate(p[0], p[1], p[2]);
     
     const top = new THREE.PlaneGeometry(s[0], s[2]);
@@ -39,10 +37,10 @@ export async function map_init(deg, id, spawn_points = []) {
     bottom.rotateX(Math.PI / 2);
     bottom.translate(0, -s[1] / 2, 0);
 
-    top.rotateX(r[0]);
-    top.rotateY(r[1]);
-    top.rotateZ(r[2]);
+    top.applyMatrix4(new THREE.Matrix4().makeRotationFromEuler(euler));
     top.translate(p[0], p[1], p[2]);
+    bottom.applyMatrix4(new THREE.Matrix4().makeRotationFromEuler(euler));
+    bottom.translate(p[0], p[1], p[2]);
 
     let uv = top.attributes.uv;
     uv.setXY(0, 0, 0);
@@ -57,12 +55,7 @@ export async function map_init(deg, id, spawn_points = []) {
     uv.setXY(2, 0, s[2] / stud_scale);
     uv.setXY(3, s[0] / stud_scale, s[2] / stud_scale);
     uv.needsUpdate = true;
-
-    bottom.rotateX(r[0]);
-    bottom.rotateY(r[1]);
-    bottom.rotateZ(r[2]);
-    bottom.translate(p[0], p[1], p[2]);
-
+    
     groups[partj.C+tr_hex].studs.push(top);
     groups[partj.C+tr_hex].studs.push(bottom);
     groups[partj.C+tr_hex].sides.push(geom);
@@ -78,19 +71,19 @@ export async function map_init(deg, id, spawn_points = []) {
       )
     });
     cpart.position.set(p[0], p[1], p[2]);
-    cpart.quaternion.setFromEuler(r[0], r[1], r[2]);
-    
+    cpart.quaternion.setFromEuler(euler.x, euler.y, euler.z, euler.order);
+
     if (partj.T == "Truss" || s[1] < 1.5) {
       truss_body.addShape(
         new CANNON.Box(new CANNON.Vec3(s[0]/2, s[1]/2, s[2]/2)),
         new CANNON.Vec3(p[0], p[1], p[2]),
-        new CANNON.Quaternion().setFromEuler(r[0], r[1],r[2])
+        new CANNON.Quaternion().setFromEuler(euler.x, euler.y, euler.z, euler.order)
       );
     } else if (partj.T == "Part") {
       map_body.addShape(
         new CANNON.Box(new CANNON.Vec3(s[0]/2, s[1]/2, s[2]/2)),
         new CANNON.Vec3(p[0], p[1], p[2]),
-        new CANNON.Quaternion().setFromEuler(r[0], r[1],r[2])
+        new CANNON.Quaternion().setFromEuler(euler.x, euler.y, euler.z, euler.order)
       );
     } else {
       console.error(`[folk] found an invalid type on map: ${partj.T}`);

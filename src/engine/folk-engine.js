@@ -369,9 +369,9 @@ export function engine_input(dt) {
   let ignore = false;
   if (movey == 1 && (player.on_ground || player.climbing)) {
     if (player.climbing) {
-      player.body.velocity.x = (Math.cos(player_yaw) + 5 * Math.sin(player_yaw)) * speed;
-      player.body.velocity.z = (Math.sin(player_yaw) + 5 * Math.cos(player_yaw)) * speed;
-      player.body.velocity.y = 200;
+      player.body.velocity.x = (Math.cos(player_yaw) + 4 * Math.sin(player_yaw)) * speed;
+      player.body.velocity.z = (Math.sin(player_yaw) + 4 * Math.cos(player_yaw)) * speed;
+      player.body.velocity.y = 50;
       ignore = true;
     } else {
       player.body.velocity.y = 50;
@@ -416,6 +416,8 @@ export function engine_input(dt) {
       console.log(Date.now());
     }
   }*/
+
+  return ignore;
 }
 
 export function angle_diff(target, current, clockwise = null) {
@@ -453,7 +455,7 @@ export function engine_loop() {
   if (dt > 0.1) {
     return;
   }
-  engine_input(dt);
+  const ignore = engine_input(dt);
   world.step(1/60, dt, 3);
 
   if (player) {
@@ -492,7 +494,7 @@ export function engine_loop() {
       });
     }
 
-    if (player.climbing) {
+    if (player.climbing && !ignore) {
       player.body.mass = 0;
       player.body.velocity.set(0, 0, 0);
     } else {

@@ -22,14 +22,12 @@ async function map_init(deg2, id, spawn_points = []) {
       continue;
     }
     const p = partj.P;
-    const r = [deg2(partj.R[0]), deg2(partj.R[1]), deg2(partj.R[2])];
+    const euler = new THREE.Euler(deg2(partj.R[0]), deg2(partj.R[1]), deg2(partj.R[2]), "XYZ");
     const s2 = partj.S;
     const tr_hex = partj.Tr.toString(16).padStart(2, "0");
     if (!groups[partj.C + tr_hex]) groups[partj.C + tr_hex] = { sides: [], studs: [] };
     const geom = new THREE.BoxGeometry(s2[0], s2[1], s2[2]);
-    geom.rotateX(r[0]);
-    geom.rotateY(r[1]);
-    geom.rotateZ(r[2]);
+    geom.applyMatrix4(new THREE.Matrix4().makeRotationFromEuler(euler));
     geom.translate(p[0], p[1], p[2]);
     const top = new THREE.PlaneGeometry(s2[0], s2[2]);
     top.rotateX(-Math.PI / 2);
@@ -37,10 +35,10 @@ async function map_init(deg2, id, spawn_points = []) {
     const bottom = new THREE.PlaneGeometry(s2[0], s2[2]);
     bottom.rotateX(Math.PI / 2);
     bottom.translate(0, -s2[1] / 2, 0);
-    top.rotateX(r[0]);
-    top.rotateY(r[1]);
-    top.rotateZ(r[2]);
+    top.applyMatrix4(new THREE.Matrix4().makeRotationFromEuler(euler));
     top.translate(p[0], p[1], p[2]);
+    bottom.applyMatrix4(new THREE.Matrix4().makeRotationFromEuler(euler));
+    bottom.translate(p[0], p[1], p[2]);
     let uv = top.attributes.uv;
     uv.setXY(0, 0, 0);
     uv.setXY(1, s2[0] / stud_scale, 0);
@@ -53,10 +51,6 @@ async function map_init(deg2, id, spawn_points = []) {
     uv.setXY(2, 0, s2[2] / stud_scale);
     uv.setXY(3, s2[0] / stud_scale, s2[2] / stud_scale);
     uv.needsUpdate = true;
-    bottom.rotateX(r[0]);
-    bottom.rotateY(r[1]);
-    bottom.rotateZ(r[2]);
-    bottom.translate(p[0], p[1], p[2]);
     groups[partj.C + tr_hex].studs.push(top);
     groups[partj.C + tr_hex].studs.push(bottom);
     groups[partj.C + tr_hex].sides.push(geom);
@@ -71,18 +65,18 @@ async function map_init(deg2, id, spawn_points = []) {
       )
     });
     cpart.position.set(p[0], p[1], p[2]);
-    cpart.quaternion.setFromEuler(r[0], r[1], r[2]);
+    cpart.quaternion.setFromEuler(euler.x, euler.y, euler.z, euler.order);
     if (partj.T == "Truss" || s2[1] < 1.5) {
       truss_body.addShape(
         new CANNON.Box(new CANNON.Vec3(s2[0] / 2, s2[1] / 2, s2[2] / 2)),
         new CANNON.Vec3(p[0], p[1], p[2]),
-        new CANNON.Quaternion().setFromEuler(r[0], r[1], r[2])
+        new CANNON.Quaternion().setFromEuler(euler.x, euler.y, euler.z, euler.order)
       );
     } else if (partj.T == "Part") {
       map_body.addShape(
         new CANNON.Box(new CANNON.Vec3(s2[0] / 2, s2[1] / 2, s2[2] / 2)),
         new CANNON.Vec3(p[0], p[1], p[2]),
-        new CANNON.Quaternion().setFromEuler(r[0], r[1], r[2])
+        new CANNON.Quaternion().setFromEuler(euler.x, euler.y, euler.z, euler.order)
       );
     } else {
       console.error(`[folk] found an invalid type on map: ${partj.T}`);
@@ -966,9 +960,9 @@ function engine_input(dt) {
   let ignore = false;
   if (movey == 1 && (player.on_ground || player.climbing)) {
     if (player.climbing) {
-      player.body.velocity.x = (Math.cos(player_yaw) + 5 * Math.sin(player_yaw)) * speed;
-      player.body.velocity.z = (Math.sin(player_yaw) + 5 * Math.cos(player_yaw)) * speed;
-      player.body.velocity.y = 200;
+      player.body.velocity.x = (Math.cos(player_yaw) + 4 * Math.sin(player_yaw)) * speed;
+      player.body.velocity.z = (Math.sin(player_yaw) + 4 * Math.cos(player_yaw)) * speed;
+      player.body.velocity.y = 50;
       ignore = true;
     } else {
       player.body.velocity.y = 50;
@@ -983,6 +977,7 @@ function engine_input(dt) {
     player.body.velocity.x = (movex * Math.cos(camera_yaw) + movez * Math.sin(camera_yaw)) * speed;
     player.body.velocity.z = (-movex * Math.sin(camera_yaw) + movez * Math.cos(camera_yaw)) * speed;
   }
+  return ignore;
 }
 function engine_move(object, target) {
   object.position.copy(target);
@@ -1001,7 +996,7 @@ function engine_loop() {
   if (dt > 0.1) {
     return;
   }
-  engine_input(dt);
+  const ignore = engine_input(dt);
   world.step(1 / 60, dt, 3);
   if (player) {
     player.model.position.copy(player.body.position);
@@ -1032,7 +1027,7 @@ function engine_loop() {
         }
       });
     }
-    if (player.climbing) {
+    if (player.climbing && !ignore) {
       player.body.mass = 0;
       player.body.velocity.set(0, 0, 0);
     } else {
