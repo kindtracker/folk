@@ -1123,19 +1123,10 @@ function multiplayer_chat(username, message) {
 // src/client/main.js
 var loaded = false;
 var params = new URL(document.location.toString()).searchParams;
-var webgpu_enabled = params.get("webgpu") ? true : false;
+var webgpu_enabled = Boolean(params.get("webgpu"));
 var game_id = params.get("game_id");
-game_id = game_id ? game_id : 1;
-var me = null;
-if (params.get("me")) {
-  me = JSON.parse(decodeURIComponent(params.get("me")));
-  if (me != null && me != void 0) {
-    localStorage.setItem("me", me);
-  }
-} else if (me == null) {
-  const me_res = await fetch("/api/me");
-  me = await me_res.json();
-}
+game_id = game_id ? game_id : "Baseplate";
+var me = JSON.parse(decodeURIComponent(params.get("me")));
 var last = performance.now();
 var s = 4;
 function frame_callback() {

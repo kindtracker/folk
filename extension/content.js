@@ -2,13 +2,13 @@ const folk_url = "http://127.0.0.1:6969";
 
 function wait_for_element(id) {
   return new Promise(resolve => {
-    const existing = document.getElementById(id);
+    const existing = document.querySelector(id);
     if (existing) {
       return resolve(existing);
     }
 
     const observer = new MutationObserver(() => {
-      const element = document.getElementById(id);
+      const element = document.querySelector(id);
 
       if (element) {
         observer.disconnect();
@@ -22,7 +22,6 @@ function wait_for_element(id) {
     });
   });
 }
-
 
 function delay(time) {
   return new Promise(resolve => setTimeout(resolve, time));
@@ -121,6 +120,13 @@ async function game_replace(page, me, game) {
   page.appendChild(div);
 }
 
+function game_add_btn(detail_header, me, game_id) {
+  const html = `<a class="btn-play" href="${folk_url + "/?game_id=" + game_id + "&me=" + encodeURIComponent(JSON.stringify(me))}" target="_blank">Play in Folk</a>`
+  const div = document.createElement("div");
+  div.innerHTML = html;
+  detail_header.appendChild(div);
+}
+
 async function game_parse(game_id) {
   let game = await browser.runtime.sendMessage({
     type: `/api/games/${game_id}`
@@ -185,7 +191,7 @@ async function get_me() {
 
   const parts = location.pathname.split("/");
   if (location.pathname == "/home") {
-    await wait_for_element("games-grid");
+    await wait_for_element("#games-grid");
     const grid = document.getElementById("games-grid");
     await delay(500);
     for (const game of all_games) {
@@ -195,10 +201,15 @@ async function get_me() {
   } else if (location.pathname.startsWith("/games/")) {
     const game_id = num2str(parts[2]);
     const game = all_games.find(game => game.id == game_id);
-    if (!game) return;
     const me = await get_me();
-    await wait_for_element("page");
-    const page = document.getElementById("page");
+    if (!game) {
+      await wait_for_element(".btn-play");
+      const detail_header = document.querySelector(".game-detail-header");
+      game_add_btn(detail_header, me, parts[2]);
+      return;
+    }
+
+    const page = await wait_for_element(".page");
     await delay(500);
     await game_replace(page, me, game);
   }

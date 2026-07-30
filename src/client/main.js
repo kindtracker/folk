@@ -4,21 +4,11 @@ import { engine_load, engine_map_load, engine_loop } from "/engine/folk-engine.j
 export let loaded = false;
 
 let params = new URL(document.location.toString()).searchParams;
-let webgpu_enabled = params.get("webgpu") ? true : false;
+let webgpu_enabled = Boolean(params.get("webgpu"))
 let game_id = params.get("game_id");
-game_id = game_id ? game_id : 1;
+game_id = game_id ? game_id : "Baseplate";
 
-export let me = null;
-
-if (params.get("me")) {
-  me = JSON.parse(decodeURIComponent(params.get("me")));
-  if (me != null && me != undefined) {
-    localStorage.setItem("me", me);
-  }
-} else if (me == null) {
-  const me_res = await fetch("/api/me");
-  me = await me_res.json();
-}
+export const me = JSON.parse(decodeURIComponent(params.get("me")));
 
 let last = performance.now();
 let s = 4;
